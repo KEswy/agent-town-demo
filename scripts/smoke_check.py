@@ -76,6 +76,13 @@ def main() -> int:
 def check_json_files() -> None:
     knowledge_items = load_json_list(KNOWLEDGE_FILE, "knowledge base")
     npc_profiles = load_json_list(NPC_PROFILES_FILE, "NPC profiles")
+    expected_trigger_profiles = {
+        "梅西", "C罗", "周深", "梅长苏", "塞尔达", "小骑士",
+        "大黄蜂", "喜羊羊", "懒羊羊", "洛洛", "奇异博士",
+    }
+    trigger_profile_names = set()
+    trigger_egg_ids = set()
+    role_reveal_profiles = set()
 
     if len(knowledge_items) < MIN_KNOWLEDGE_COUNT:
         raise SmokeCheckError(
@@ -99,11 +106,41 @@ def check_json_files() -> None:
         if item["npc_name"] not in {"Guide", "Archivist"}:
             require_keys(
                 item,
-                {"speech_style", "catchphrases", "easter_eggs"},
+                {"speech_style", "catchphrases", "easter_eggs", "trigger_easter_eggs"},
                 f"wolf-game NPC profile #{index}",
             )
             if not item["speech_style"] or not item["catchphrases"] or not item["easter_eggs"]:
                 raise SmokeCheckError(f"wolf-game NPC profile #{index} voice data must not be empty")
+            trigger_eggs = item["trigger_easter_eggs"]
+            if not isinstance(trigger_eggs, list) or len(trigger_eggs) != 1:
+                raise SmokeCheckError(f"wolf-game NPC profile #{index} must have one trigger easter egg")
+            trigger_egg = trigger_eggs[0]
+            require_keys(
+                trigger_egg,
+                {"egg_id", "triggers", "reply", "repeat_reply"},
+                f"trigger easter egg for {item['npc_name']}",
+            )
+            if (
+                not trigger_egg["egg_id"]
+                or not isinstance(trigger_egg["triggers"], list)
+                or not trigger_egg["triggers"]
+                or not trigger_egg["reply"]
+                or not trigger_egg["repeat_reply"]
+            ):
+                raise SmokeCheckError(f"trigger easter egg for {item['npc_name']} is incomplete")
+            if trigger_egg["egg_id"] in trigger_egg_ids:
+                raise SmokeCheckError(f"duplicate trigger easter egg id: {trigger_egg['egg_id']}")
+            trigger_profile_names.add(item["npc_name"])
+            trigger_egg_ids.add(trigger_egg["egg_id"])
+            if bool(trigger_egg.get("reveal_self_role", False)):
+                role_reveal_profiles.add(item["npc_name"])
+                if "{role}" not in trigger_egg["reply"]:
+                    raise SmokeCheckError("role-reveal easter egg must contain the {role} placeholder")
+
+    if trigger_profile_names != expected_trigger_profiles:
+        raise SmokeCheckError("trigger easter eggs must cover all eleven wolf-game NPCs")
+    if role_reveal_profiles != {"梅长苏"}:
+        raise SmokeCheckError("only 梅长苏 may reveal a real role through a trigger easter egg")
 
     for path in [KNOWLEDGE_FILE, NPC_PROFILES_FILE, BACKEND_MAIN_FILE]:
         if "\ufffd" in path.read_text(encoding="utf-8"):
@@ -545,6 +582,8 @@ withdraw_response = submit_sheriff_withdrawal(
 )
 if not withdraw_response.success:
     raise SystemExit("withdrawal phase should accept the player's stay decision")
+if player.id in game_state.sheriff_election.withdrawn:
+    raise SystemExit("continue campaign should keep the player in the active sheriff candidates")
 
 while game_state.phase in {"SHERIFF_VOTE", "SHERIFF_RUNOFF_SPEECH", "SHERIFF_RUNOFF_VOTE"}:
     if game_state.phase == "SHERIFF_RUNOFF_SPEECH":
@@ -1490,6 +1529,110 @@ for test_day in range(1, 12):
 if not voice_changed:
     raise SystemExit("configured NPC voice should occasionally affect rule speech")
 
+easter_egg_state = make_rule_test_game(["villager"])
+easter_egg_state.phase = "FREE_ACTIVITY"
+mei_changsu = next(
+    character for character in easter_egg_state.characters
+    if character.name == "梅长苏"
+)
+mei_changsu.role = "guard"
+mei_changsu.camp = "good"
+easter_egg_response = private_chat(
+    PrivateChatRequest(
+        game_id=easter_egg_state.game_id,
+        npc_character_id=mei_changsu.id,
+        question="林殊！",
+    )
+)
+if not easter_egg_response.easter_egg_triggered or not easter_egg_response.easter_egg_first_time:
+    raise SystemExit("梅长苏 should recognize the 林殊 trigger with punctuation")
+if easter_egg_response.effective or not easter_egg_response.can_influence_again:
+    raise SystemExit("a trigger easter egg must not consume the effective private question")
+if "我是守卫" not in easter_egg_response.reply:
+    raise SystemExit("梅长苏's 林殊 easter egg must reveal the real game role")
+
+repeat_easter_egg_response = private_chat(
+    PrivateChatRequest(
+        game_id=easter_egg_state.game_id,
+        npc_character_id=mei_changsu.id,
+        question="你真的是林殊吗？",
+    )
+)
+if not repeat_easter_egg_response.easter_egg_triggered or repeat_easter_egg_response.easter_egg_first_time:
+    raise SystemExit("a repeated trigger should use the repeat easter-egg response")
+easter_egg_history = get_wolf_game_state(easter_egg_state.game_id).player_private_info.action_history
+if sum("发现梅长苏的关键词彩蛋" in item for item in easter_egg_history) != 1:
+    raise SystemExit("a trigger easter egg should appear once in player private history")
+if not any("本局身份是守卫" in item for item in easter_egg_history):
+    raise SystemExit("the privately revealed role should be saved in player action history")
+
+for trigger_npc in easter_egg_state.characters:
+    if trigger_npc.is_player or trigger_npc.id == mei_changsu.id:
+        continue
+    trigger_profile = main_module.NPC_PROFILES[trigger_npc.name]
+    trigger_text = trigger_profile.trigger_easter_eggs[0].triggers[0]
+    trigger_response = private_chat(
+        PrivateChatRequest(
+            game_id=easter_egg_state.game_id,
+            npc_character_id=trigger_npc.id,
+            question=f"试试这个口令：{trigger_text}！",
+        )
+    )
+    if not trigger_response.easter_egg_triggered or not trigger_response.easter_egg_first_time:
+        raise SystemExit(f"{trigger_npc.name} trigger easter egg should work in private chat")
+    if trigger_response.effective:
+        raise SystemExit(f"{trigger_npc.name} trigger easter egg must not affect decisions")
+
+post_easter_egg_question = private_chat(
+    PrivateChatRequest(
+        game_id=easter_egg_state.game_id,
+        npc_character_id=mei_changsu.id,
+        question="我怀疑2号梅西，他的发言需要解释。",
+    )
+)
+if not post_easter_egg_question.effective:
+    raise SystemExit("a normal private question should remain effective after an easter egg")
+
+easter_egg_rule_text = main_module.build_triggered_easter_egg_reply(
+    mei_changsu,
+    main_module.NPC_PROFILES["梅长苏"].trigger_easter_eggs[0],
+    True,
+)
+authorized_role_rewrite = main_module.validate_llm_rewrite(
+    LLMGeneration(
+        text="你既然认出了林殊，我便直说：我是守卫，这件事暂且不要公开。",
+        used_llm=True,
+        provider="stub",
+        model="stub",
+    ),
+    easter_egg_rule_text,
+    easter_egg_state,
+    speaker=mei_changsu,
+    required_self_role="guard",
+)
+if not authorized_role_rewrite.used_llm:
+    raise SystemExit("validator should accept the authorized true self-role easter egg")
+
+for invalid_text in [
+    "你既然认出了林殊，这件事暂且不要公开。",
+    "你既然认出了林殊，我便直说：我是狼人。",
+    "你既然认出了林殊，我是守卫，但我也继续以预言家身份行动。",
+]:
+    invalid_role_rewrite = main_module.validate_llm_rewrite(
+        LLMGeneration(
+            text=invalid_text,
+            used_llm=True,
+            provider="stub",
+            model="stub",
+        ),
+        easter_egg_rule_text,
+        easter_egg_state,
+        speaker=mei_changsu,
+        required_self_role="guard",
+    )
+    if invalid_role_rewrite.used_llm:
+        raise SystemExit("validator should reject an omitted or changed easter-egg role")
+
 wolf_team_state = make_rule_test_game(
     [
         "werewolf", "werewolf", "werewolf", "werewolf",
@@ -1877,6 +2020,20 @@ freedom_signup = submit_sheriff_signup(
 )
 if 1 in freedom_signup.candidates:
     raise SystemExit("player seer must be free to stay off the sheriff election")
+
+npc_only_withdrawal_state = make_rule_test_game(
+    ["villager", "seer", "werewolf", "villager", "villager", "villager"]
+)
+npc_only_withdrawal_state.badge_destroyed = False
+npc_only_withdrawal_state.sheriff_election = SheriffElectionState(
+    candidates=[2, 3],
+    speech_order=[2, 3],
+    current_index=1,
+)
+npc_only_withdrawal_state.phase = "SHERIFF_SPEECH"
+main_module.advance_sheriff_speech(npc_only_withdrawal_state)
+if npc_only_withdrawal_state.phase == "SHERIFF_WITHDRAWAL":
+    raise SystemExit("a player who stayed off sheriff should not have to complete NPC withdrawals")
 
 wolf_coordination_state = make_rule_test_game(
     ["werewolf", "seer", "werewolf", "werewolf", "werewolf", "villager"]
@@ -2307,6 +2464,7 @@ def check_godot_ui_layout() -> None:
     required_scene_fragments = [
         '[node name="ScrollContainer" type="ScrollContainer"',
         'horizontal_scroll_mode = 0',
+        'offset_left = -536.0',
         'default_font_size = 13',
         'columns = 2',
         'text = "RanRanHuaiHuaiKill"',
@@ -2321,6 +2479,11 @@ def check_godot_ui_layout() -> None:
         '[node name="HunterShotRequest" type="HTTPRequest"',
         '[node name="SheriffActionLabel" type="Label"',
         '[node name="SheriffOption" type="OptionButton"',
+        '[node name="SheriffWithdrawalRow" type="HBoxContainer"',
+        '[node name="ContinueButton" type="Button"',
+        'text = "继续竞选"',
+        '[node name="WithdrawButton" type="Button"',
+        'text = "退水"',
         '[node name="SheriffSpeechInput" type="LineEdit"',
         '[node name="VoteReasonInput" type="LineEdit"',
         '[node name="VoteResultLabel" type="Label"',
@@ -2348,10 +2511,17 @@ def check_godot_ui_layout() -> None:
         raise SmokeCheckError("Godot character cards are not using the portrait two-column size")
     for fragment in [
         '@onready var wolf_scroll_container: ScrollContainer',
+        'const WOLF_MENU_WIDTH := 520.0',
+        'const WOLF_MENU_MIN_EXPANDED_HEIGHT := 500.0',
+        'const WOLF_MENU_MAX_EXPANDED_HEIGHT := 760.0',
+        'viewport_height * 0.82',
         'var phase_changed := _current_wolf_phase != str(phase)',
-        'call_deferred("_reset_wolf_panel_scroll")',
+        'call_deferred("_keep_sheriff_controls_visible")',
+        'wolf_scroll_container.ensure_control_visible(sheriff_withdrawal_row)',
         'player_action_history_text.text = "\\n".join(lines)',
         'wolf_scroll_container.scroll_vertical = 0',
+        'var easter_egg_triggered := bool(json.data.get("easter_egg_triggered", false))',
+        '发现新的角色彩蛋。本次不会消耗今天的有效追问机会。',
     ]:
         if fragment not in script_text:
             raise SmokeCheckError(f"Godot compact panel behavior is missing: {fragment}")
@@ -2372,6 +2542,10 @@ def check_godot_ui_layout() -> None:
         'character.get("public_claims", [])',
         'const WOLF_COMBINED_VOTE_URL',
         'func _update_sheriff_controls(game_data: Dictionary)',
+        'func _on_sheriff_continue_button_pressed()',
+        'func _on_sheriff_withdraw_button_pressed()',
+        'func _submit_sheriff_action(withdraw_choice: Variant = null)',
+        '"投警长并公布" if can_vote else "公布警长票型"',
         '"SHERIFF_WITHDRAWAL":',
         'func _format_combined_vote_result(vote_data: Dictionary)',
         '"reason": vote_reason',

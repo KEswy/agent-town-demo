@@ -88,7 +88,7 @@ NIGHT → SHERIFF_SIGNUP → SHERIFF_SPEECH → SHERIFF_WITHDRAWAL（第一天�
 - `HUNTER_SHOT`：玩家猎人因狼袭或放逐出局后选择开枪目标或不开枪；被毒出局不能开枪。
 - `SHERIFF_SIGNUP`：第一天玩家选择是否上警，NPC 同步形成候选人列表。
 - `SHERIFF_SPEECH`：候选人按随机顺序发言；NPC 真预言家必须报出真实验人。
-- `SHERIFF_WITHDRAWAL`：所有候选人明确继续或退水，阶段不会自动省略。
+- `SHERIFF_WITHDRAWAL`：候选玩家通过独立按钮明确继续或退水；玩家未上警时由后端直接结算 NPC 选择，不要求玩家代为推进。
 - `SHERIFF_VOTE`：警下角色同时投票；最高票平局时只进行一次 PK 发言和重投。
 - 首夜结果公布：竞选全部结束后才执行狼刀、解药、毒药和守卫结果；后续夜晚不延迟。
 - `MEETING_ORDER`：警长选择出局左/右或警左/右，没有警长时使用随机首位和方向。
@@ -151,7 +151,7 @@ NIGHT → SHERIFF_SIGNUP → SHERIFF_SPEECH → SHERIFF_WITHDRAWAL（第一天�
 
 同一响应的 `sheriff` 字段包含完整候选人、活跃候选人、退水名单、当前竞选发言者、轮次、投票资格及原因、可投目标、警长、发言锚点、暂时归票和最终归票目标。角色视图的 `sheriff_campaign_status` 为 `candidate`、`withdrawn`、`pk` 或空字符串，供 Godot 显示头顶标记。
 
-同一响应的 `player_private_info.action_history` 是只对玩家可见的本局累计记录，包含夜间技能与结算结果、猎人开枪、警上操作、完整公开发言、私聊问题及放逐投票；新游戏使用新的状态数组，因此记录自动清空。
+同一响应的 `player_private_info.action_history` 是只对玩家可见的本局累计记录，包含夜间技能与结算结果、猎人开枪、警上操作、完整公开发言、私聊问题、首次触发彩蛋及放逐投票；新游戏使用新的状态数组，因此记录自动清空。
 
 服务端会验证发言者。玩家和 NPC 都不能跳过顺序，也不能在同一天重复正式发言。
 
@@ -159,9 +159,11 @@ NPC 正式发言会检索知识库和当前已经发生的公开发言。返回�
 
 公开发言会解析并记录身份与验人声明。真预言家可以公布实际查验；每局指定一名 NPC 狼人作为悍跳候选，可以起跳预言家并维护跨轮假验人记录；女巫、守卫和猎人也会根据已知信息、公开压力与性格决定是否公开技能信息。公共状态只返回中立的 `public_claims` 标签，不标记真假。
 
-`config/npc_profiles.json` 中的 `speech_style`、`catchphrases` 和 `easter_eggs` 控制角色化表达。规则文本和 LLM 润色都必须保留公开声明中的身份、目标、结果与技能行动；校验器按事实而非模板字面判断，姓名、座位号、“好人/金水”等同义词和合法私聊代词会归一到同一事实。五轮均失败时响应返回 `llm_validation_failure`，当前调试版 Godot 会展示每轮完整原文与全部原因。
+`config/npc_profiles.json` 中的 `speech_style`、`catchphrases`、`easter_eggs` 和 `trigger_easter_eggs` 控制角色化表达。触发彩蛋只在 `FREE_ACTIVITY` 私聊中匹配，忽略大小写、空格和标点；每名狼人杀 NPC 当前配置一个关键词彩蛋。规则文本和 LLM 润色都必须保留公开声明中的身份、目标、结果与技能行动；校验器按事实而非模板字面判断，姓名、座位号、“好人/金水”等同义词和合法私聊代词会归一到同一事实。五轮均失败时响应返回 `llm_validation_failure`，当前调试版 Godot 会展示每轮完整原文与全部原因。
 
-`POST /api/day/private-chat` 只允许在 `FREE_ACTIVITY` 使用。私聊不会写入 `public_logs`；同一 NPC 当天只有第一次提问会修改怀疑、信任和内部记忆，后续追问只返回回答。
+`POST /api/day/private-chat` 只允许在 `FREE_ACTIVITY` 使用。私聊不会写入 `public_logs`；同一 NPC 当天只有第一次普通提问会修改怀疑、信任和内部记忆，后续追问只返回回答。关键词彩蛋不消耗这次有效提问，首次发现会写入玩家私密行动记录。
+
+梅长苏的 `mei_changsu_lin_shu` 彩蛋是当前唯一允许透露真实游戏身份的触发项。后端把实际身份作为 `required_self_role` 写入 LLM 校验契约；回复遗漏身份、改成其他身份、增加其他角色身份或泄露狼队友时仍会拒绝，最终规则回退始终保留正确身份。
 
 私聊回复使用当前会话视角：NPC 以“我”自称、称玩家为“你”，其他角色显示“号码 + 名字”。玩家消息里的“我/自己”映射到玩家，“你”映射到当前 NPC；无法从本句或同一 NPC 最近私聊中解析的“他/她/TA”会触发澄清，并且不消耗当天的有效追问次数。
 
@@ -189,7 +191,7 @@ NPC 正式发言会检索知识库和当前已经发生的公开发言。返回�
 
 ## 配置
 
-- `config/npc_profiles.json`：NPC 人设、说话风格、口头禅、彩蛋与基础知识。
+- `config/npc_profiles.json`：NPC 人设、说话风格、口头禅、随机彩蛋、关键词触发彩蛋与基础知识。
 - `config/knowledge_base.json`：107 条静态知识，包括开发资料、十二人狼人杀规则、完整警长规则、身份声明规则和 11 名 NPC 的判断风格。
 - `data/memory.json`：运行时普通对话记忆。
 

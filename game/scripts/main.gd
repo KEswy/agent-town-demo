@@ -22,11 +22,11 @@ const WOLF_SHERIFF_NOMINATE_URL := "http://127.0.0.1:8000/api/sheriff/nominate"
 const WOLF_SHERIFF_TRANSFER_URL := "http://127.0.0.1:8000/api/sheriff/transfer"
 const WOLF_COMBINED_VOTE_URL := "http://127.0.0.1:8000/api/vote/submit-and-resolve"
 const PLAYER_ID := "player"
-const WOLF_MENU_WIDTH := 420.0
+const WOLF_MENU_WIDTH := 520.0
 const WOLF_MENU_TOP := 16.0
 const WOLF_MENU_COLLAPSED_HEIGHT := 44.0
-const WOLF_MENU_MIN_EXPANDED_HEIGHT := 420.0
-const WOLF_MENU_MAX_EXPANDED_HEIGHT := 680.0
+const WOLF_MENU_MIN_EXPANDED_HEIGHT := 500.0
+const WOLF_MENU_MAX_EXPANDED_HEIGHT := 760.0
 const CHARACTER_SKIN_PATHS := {
 	"梅西": "res://assets/characters/messi.svg",
 	"C罗": "res://assets/characters/ronaldo.svg",
@@ -77,6 +77,9 @@ const CHARACTER_SKIN_PATHS := {
 @onready var sheriff_choice_row: HBoxContainer = $UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/SheriffChoiceRow
 @onready var sheriff_option: OptionButton = $UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/SheriffChoiceRow/SheriffOption
 @onready var sheriff_action_button: Button = $UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/SheriffChoiceRow/SheriffActionButton
+@onready var sheriff_withdrawal_row: HBoxContainer = $UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/SheriffWithdrawalRow
+@onready var sheriff_continue_button: Button = $UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/SheriffWithdrawalRow/ContinueButton
+@onready var sheriff_withdraw_button: Button = $UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/SheriffWithdrawalRow/WithdrawButton
 @onready var sheriff_speech_input: LineEdit = $UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/SheriffSpeechRow/SheriffSpeechInput
 @onready var sheriff_speech_button: Button = $UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/SheriffSpeechRow/SheriffSpeechButton
 @onready var sheriff_speech_row: HBoxContainer = $UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/SheriffSpeechRow
@@ -197,6 +200,8 @@ func _ready() -> void:
 	hunter_shoot_button.pressed.connect(_on_hunter_shoot_button_pressed)
 	hunter_pass_button.pressed.connect(_on_hunter_pass_button_pressed)
 	sheriff_action_button.pressed.connect(_on_sheriff_action_button_pressed)
+	sheriff_continue_button.pressed.connect(_on_sheriff_continue_button_pressed)
+	sheriff_withdraw_button.pressed.connect(_on_sheriff_withdraw_button_pressed)
 	sheriff_speech_button.pressed.connect(_on_sheriff_speech_button_pressed)
 	sheriff_speech_input.text_submitted.connect(_on_sheriff_speech_input_submitted)
 	submit_speech_button.pressed.connect(_on_submit_speech_button_pressed)
@@ -282,7 +287,7 @@ func _get_wolf_menu_target_height() -> float:
 		return WOLF_MENU_COLLAPSED_HEIGHT
 	var viewport_height := float(get_viewport().get_visible_rect().size.y)
 	return clampf(
-		viewport_height * 0.75,
+		viewport_height * 0.82,
 		WOLF_MENU_MIN_EXPANDED_HEIGHT,
 		WOLF_MENU_MAX_EXPANDED_HEIGHT
 	)
@@ -734,6 +739,18 @@ func _on_end_free_activity_button_pressed() -> void:
 
 
 func _on_sheriff_action_button_pressed() -> void:
+	_submit_sheriff_action()
+
+
+func _on_sheriff_continue_button_pressed() -> void:
+	_submit_sheriff_action(false)
+
+
+func _on_sheriff_withdraw_button_pressed() -> void:
+	_submit_sheriff_action(true)
+
+
+func _submit_sheriff_action(withdraw_choice: Variant = null) -> void:
 	if _is_sheriff_action_requesting or _current_wolf_game_id.is_empty():
 		return
 
@@ -748,8 +765,10 @@ func _on_sheriff_action_button_pressed() -> void:
 			url = WOLF_SHERIFF_SIGNUP_URL
 			body["run_for_sheriff"] = bool(_get_selected_option_metadata(sheriff_option, false))
 		"SHERIFF_WITHDRAWAL":
+			if withdraw_choice == null:
+				return
 			url = WOLF_SHERIFF_WITHDRAW_URL
-			body["withdraw"] = bool(_get_selected_option_metadata(sheriff_option, false))
+			body["withdraw"] = bool(withdraw_choice)
 		"SHERIFF_VOTE", "SHERIFF_RUNOFF_VOTE":
 			url = WOLF_SHERIFF_VOTE_URL
 			body["target_id"] = (
@@ -1156,8 +1175,16 @@ func _on_private_chat_request_completed(result: int, response_code: int, _header
 	var llm_used := bool(json.data.get("llm_used", false))
 	var llm_provider := str(json.data.get("llm_provider", "rule"))
 	var llm_fallback_reason := str(json.data.get("llm_fallback_reason", ""))
+	var easter_egg_triggered := bool(json.data.get("easter_egg_triggered", false))
+	var easter_egg_first_time := bool(json.data.get("easter_egg_first_time", false))
 	var effect_note := "\n\n本次追问已影响该 NPC 的判断。"
-	if not effective and can_influence_again:
+	if easter_egg_triggered:
+		effect_note = (
+			"\n\n发现新的角色彩蛋。本次不会消耗今天的有效追问机会。"
+			if easter_egg_first_time
+			else "\n\n这个角色彩蛋已经触发过。本次仍不会消耗有效追问机会。"
+		)
+	elif not effective and can_influence_again:
 		effect_note = "\n\n本次追问尚未影响该 NPC 的判断，明确对象后仍可进行今天的有效追问。"
 	elif not effective:
 		effect_note = "\n\n本次是追加追问，不会再次改变该 NPC 的决策。"
@@ -1379,7 +1406,14 @@ func _render_wolf_game(game_data: Dictionary) -> void:
 	_update_contextual_panel_visibility()
 	_update_wolf_menu_summary()
 	if phase_changed:
-		call_deferred("_reset_wolf_panel_scroll")
+		if _current_wolf_phase in [
+			"SHERIFF_SIGNUP", "SHERIFF_SPEECH", "SHERIFF_WITHDRAWAL",
+			"SHERIFF_VOTE", "SHERIFF_RUNOFF_SPEECH", "SHERIFF_RUNOFF_VOTE",
+			"MEETING_ORDER", "SHERIFF_NOMINATION", "BADGE_TRANSFER",
+		]:
+			call_deferred("_keep_sheriff_controls_visible")
+		else:
+			call_deferred("_reset_wolf_panel_scroll")
 	review_game_button.disabled = _current_wolf_phase != "GAME_OVER" or _is_loading_game_summary
 	if (
 		_current_wolf_phase == "GAME_OVER"
@@ -1590,6 +1624,18 @@ func _reset_wolf_panel_scroll() -> void:
 	wolf_scroll_container.scroll_vertical = 0
 
 
+func _keep_sheriff_controls_visible() -> void:
+	if not sheriff_action_label.visible:
+		return
+	wolf_scroll_container.ensure_control_visible(sheriff_action_label)
+	if sheriff_withdrawal_row.visible:
+		wolf_scroll_container.ensure_control_visible(sheriff_withdrawal_row)
+	elif sheriff_choice_row.visible:
+		wolf_scroll_container.ensure_control_visible(sheriff_choice_row)
+	elif sheriff_speech_row.visible:
+		wolf_scroll_container.ensure_control_visible(sheriff_speech_row)
+
+
 func _update_contextual_panel_visibility() -> void:
 	var has_game := not _current_wolf_game_id.is_empty()
 	var night_visible := has_game and _current_wolf_phase == "NIGHT"
@@ -1600,6 +1646,14 @@ func _update_contextual_panel_visibility() -> void:
 		"MEETING_ORDER", "SHERIFF_NOMINATION", "BADGE_TRANSFER",
 	]
 	var sheriff_speech_visible := _current_wolf_phase in ["SHERIFF_SPEECH", "SHERIFF_RUNOFF_SPEECH"]
+	var sheriff_withdrawal_visible := false
+	if _current_wolf_phase == "SHERIFF_WITHDRAWAL":
+		var candidates = _current_sheriff_data.get("candidates", [])
+		var withdrawn = _current_sheriff_data.get("withdrawn", [])
+		sheriff_withdrawal_visible = (
+			_array_has_int(candidates, _current_player_character_id)
+			and not _array_has_int(withdrawn, _current_player_character_id)
+		)
 	var day_visible := _current_wolf_phase in ["DAY_MEETING", "FREE_ACTIVITY"]
 	var vote_visible := _current_wolf_phase == "VOTE"
 
@@ -1608,7 +1662,12 @@ func _update_contextual_panel_visibility() -> void:
 	hunter_action_label.visible = hunter_visible
 	hunter_action_row.visible = hunter_visible
 	sheriff_action_label.visible = sheriff_visible
-	sheriff_choice_row.visible = sheriff_visible and not sheriff_speech_visible
+	sheriff_choice_row.visible = (
+		sheriff_visible
+		and not sheriff_speech_visible
+		and _current_wolf_phase != "SHERIFF_WITHDRAWAL"
+	)
+	sheriff_withdrawal_row.visible = sheriff_withdrawal_visible
 	sheriff_speech_row.visible = sheriff_visible and sheriff_speech_visible
 	day_speech_label.visible = day_visible
 	day_speech_row.visible = day_visible
@@ -1806,6 +1865,8 @@ func _update_sheriff_controls(game_data: Dictionary) -> void:
 	sheriff_speech_button.disabled = true
 	sheriff_action_button.disabled = true
 	sheriff_option.disabled = true
+	sheriff_continue_button.disabled = true
+	sheriff_withdraw_button.disabled = true
 
 	var busy := _is_sheriff_action_requesting or _is_sheriff_speech_requesting
 	var characters = game_data.get("characters", [])
@@ -1831,15 +1892,14 @@ func _update_sheriff_controls(game_data: Dictionary) -> void:
 			var withdrawn = _current_sheriff_data.get("withdrawn", [])
 			var player_is_candidate := _array_has_int(candidates, _current_player_character_id)
 			var player_withdrawn := _array_has_int(withdrawn, _current_player_character_id)
-			sheriff_action_label.text = "退水阶段：候选人确认是否继续竞选"
 			if player_is_candidate and not player_withdrawn:
-				_add_sheriff_option("继续竞选", false)
-				_add_sheriff_option("退水", true)
+				sheriff_action_label.text = "退水阶段：请选择继续竞选或退水"
+				sheriff_continue_button.disabled = busy
+				sheriff_withdraw_button.disabled = busy
+			elif player_withdrawn:
+				sheriff_action_label.text = "退水阶段：你已退水，正在等待其他候选人"
 			else:
-				_add_sheriff_option("等待候选人退水", false)
-			sheriff_action_button.text = "完成退水"
-			sheriff_option.disabled = busy or not player_is_candidate or player_withdrawn
-			sheriff_action_button.disabled = busy
+				sheriff_action_label.text = "退水阶段：正在自动结算候选人的选择"
 		"SHERIFF_VOTE", "SHERIFF_RUNOFF_VOTE":
 			var can_vote := bool(_current_sheriff_data.get("player_can_vote", false))
 			var ineligible_reason := str(_current_sheriff_data.get("player_vote_ineligible_reason", ""))
@@ -1851,7 +1911,7 @@ func _update_sheriff_controls(game_data: Dictionary) -> void:
 					ineligible_reason if not ineligible_reason.is_empty() else "当前不能参与警长投票",
 					null
 				)
-			sheriff_action_button.text = "投警长并公布"
+			sheriff_action_button.text = "投警长并公布" if can_vote else "公布警长票型"
 			sheriff_option.disabled = busy or not can_vote
 			sheriff_action_button.disabled = busy or (can_vote and sheriff_option.get_item_count() == 0)
 		"MEETING_ORDER":

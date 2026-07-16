@@ -161,6 +161,14 @@ NPC_PERSONALITIES = {
 }
 
 
+class TriggerEasterEgg(BaseModel):
+    egg_id: str
+    triggers: list[str]
+    reply: str
+    repeat_reply: str
+    reveal_self_role: bool = False
+
+
 class NPCProfile(BaseModel):
     npc_name: str
     role: str
@@ -169,6 +177,7 @@ class NPCProfile(BaseModel):
     speech_style: str = ""
     catchphrases: list[str] = Field(default_factory=list)
     easter_eggs: list[str] = Field(default_factory=list)
+    trigger_easter_eggs: list[TriggerEasterEgg] = Field(default_factory=list)
 
 
 class KnowledgeItem(BaseModel):
@@ -348,6 +357,9 @@ class PrivateConversationState(BaseModel):
     reply: str
     effective: bool
     llm_validation_failure_id: str = ""
+    easter_egg_id: str = ""
+    easter_egg_first_time: bool = False
+    revealed_role: Optional[str] = None
 
 
 class EliminationState(BaseModel):
@@ -791,6 +803,8 @@ class PrivateChatResponse(BaseModel):
     llm_provider: str = "rule"
     llm_fallback_reason: str = ""
     llm_validation_failure: Optional[LLMValidationFailureView] = None
+    easter_egg_triggered: bool = False
+    easter_egg_first_time: bool = False
 
 
 class NpcVoteDecision(BaseModel):
@@ -1837,6 +1851,10 @@ def advance_sheriff_speech(game_state: WolfGameState) -> None:
     else:
         game_state.phase = "SHERIFF_WITHDRAWAL"
         game_state.public_logs.append("警上发言结束，进入退水阶段。")
+        player = get_character(game_state, game_state.player_character_id)
+        if player.id not in election.candidates:
+            apply_npc_sheriff_withdrawals(game_state)
+            complete_sheriff_withdrawal(game_state)
 
 
 def apply_npc_sheriff_withdrawals(game_state: WolfGameState) -> None:
@@ -2644,46 +2662,77 @@ def private_chat(request: PrivateChatRequest) -> PrivateChatResponse:
         if not npc.alive:
             raise HTTPException(status_code=400, detail="出局 NPC 不能接受私密追问。")
 
-        parsed_question, unresolved_reference = parse_private_question(game_state, npc, question)
-        effective = (
-            not unresolved_reference
-            and not has_effective_private_question(game_state, npc.id)
-        )
-        if effective:
-            apply_private_question_effect(game_state, npc, question, parsed_question)
-        rag_context = (
-            []
-            if unresolved_reference
-            else build_private_rag_context(game_state, npc, question)
-        )
-        if unresolved_reference:
-            rule_reply = "你说的‘他/她/TA’目前没有明确对象。你指的是哪位角色？请告诉我号码或名字。"
+        triggered_easter_egg = find_triggered_easter_egg(npc, question)
+        easter_egg_id = ""
+        easter_egg_first_time = False
+        revealed_role: Optional[str] = None
+        if triggered_easter_egg is not None:
+            easter_egg_id = triggered_easter_egg.egg_id
+            easter_egg_first_time = not has_triggered_easter_egg(
+                game_state,
+                npc.id,
+                easter_egg_id,
+            )
+            effective = False
+            rag_context = []
+            rule_reply = build_triggered_easter_egg_reply(
+                npc,
+                triggered_easter_egg,
+                easter_egg_first_time,
+            )
+            if triggered_easter_egg.reveal_self_role and easter_egg_first_time:
+                revealed_role = npc.role
             llm_result = generate_private_chat_llm_text(
                 game_state,
                 npc,
                 question,
                 rule_reply,
                 [],
+                required_self_role=revealed_role,
+                easter_egg_id=easter_egg_id,
             )
             reply = render_private_perspective_text(game_state, npc, llm_result.text)
         else:
-            rule_reply = build_private_chat_reply(
-                game_state,
-                npc,
-                question,
-                effective,
-                rag_context,
-                parsed_question,
+            parsed_question, unresolved_reference = parse_private_question(game_state, npc, question)
+            effective = (
+                not unresolved_reference
+                and not has_effective_private_question(game_state, npc.id)
             )
-            rule_reply = apply_npc_voice(game_state, npc, rule_reply, "private")
-            llm_result = generate_private_chat_llm_text(
-                game_state,
-                npc,
-                question,
-                rule_reply,
-                rag_context,
+            if effective:
+                apply_private_question_effect(game_state, npc, question, parsed_question)
+            rag_context = (
+                []
+                if unresolved_reference
+                else build_private_rag_context(game_state, npc, question)
             )
-            reply = render_private_perspective_text(game_state, npc, llm_result.text)
+            if unresolved_reference:
+                rule_reply = "你说的‘他/她/TA’目前没有明确对象。你指的是哪位角色？请告诉我号码或名字。"
+                llm_result = generate_private_chat_llm_text(
+                    game_state,
+                    npc,
+                    question,
+                    rule_reply,
+                    [],
+                )
+                reply = render_private_perspective_text(game_state, npc, llm_result.text)
+            else:
+                rule_reply = build_private_chat_reply(
+                    game_state,
+                    npc,
+                    question,
+                    effective,
+                    rag_context,
+                    parsed_question,
+                )
+                rule_reply = apply_npc_voice(game_state, npc, rule_reply, "private")
+                llm_result = generate_private_chat_llm_text(
+                    game_state,
+                    npc,
+                    question,
+                    rule_reply,
+                    rag_context,
+                )
+                reply = render_private_perspective_text(game_state, npc, llm_result.text)
         game_state.private_conversations.append(
             PrivateConversationState(
                 day=game_state.day,
@@ -2692,6 +2741,9 @@ def private_chat(request: PrivateChatRequest) -> PrivateChatResponse:
                 reply=reply,
                 effective=effective,
                 llm_validation_failure_id=llm_result.validation_failure_id,
+                easter_egg_id=easter_egg_id,
+                easter_egg_first_time=easter_egg_first_time,
+                revealed_role=revealed_role,
             )
         )
         game_state.updated_at = datetime.now(timezone.utc).isoformat()
@@ -2711,6 +2763,8 @@ def private_chat(request: PrivateChatRequest) -> PrivateChatResponse:
             game_state,
             llm_result.validation_failure_id,
         ),
+        easter_egg_triggered=triggered_easter_egg is not None,
+        easter_egg_first_time=easter_egg_first_time,
     )
 
 
@@ -3242,6 +3296,21 @@ def build_player_action_history(game_state: WolfGameState) -> list[str]:
 
     for conversation in game_state.private_conversations:
         npc = get_character(game_state, conversation.npc_character_id)
+        if conversation.easter_egg_id:
+            if not conversation.easter_egg_first_time:
+                continue
+            detail = f"发现{npc.name}的关键词彩蛋"
+            if conversation.revealed_role:
+                detail += "；对方向你透露本局身份是" + ROLE_LABELS.get(
+                    conversation.revealed_role,
+                    conversation.revealed_role,
+                )
+            add_item(
+                conversation.day,
+                45,
+                f"第{conversation.day}天 · 彩蛋：{detail}",
+            )
+            continue
         add_item(
             conversation.day,
             45,
@@ -3779,6 +3848,47 @@ def advance_day_meeting(game_state: WolfGameState) -> None:
                 if target_id is not None:
                     set_sheriff_nomination(game_state, sheriff, target_id)
         enter_free_activity(game_state)
+
+
+def normalize_easter_egg_text(text: str) -> str:
+    return re.sub(r"[\W_]+", "", text, flags=re.UNICODE).casefold()
+
+
+def find_triggered_easter_egg(
+    npc: CharacterState,
+    question: str,
+) -> Optional[TriggerEasterEgg]:
+    profile = NPC_PROFILES.get(npc.name)
+    if profile is None:
+        return None
+    normalized_question = normalize_easter_egg_text(question)
+    for easter_egg in profile.trigger_easter_eggs:
+        for trigger in easter_egg.triggers:
+            normalized_trigger = normalize_easter_egg_text(trigger)
+            if normalized_trigger and normalized_trigger in normalized_question:
+                return easter_egg
+    return None
+
+
+def has_triggered_easter_egg(
+    game_state: WolfGameState,
+    npc_character_id: int,
+    easter_egg_id: str,
+) -> bool:
+    return any(
+        conversation.npc_character_id == npc_character_id
+        and conversation.easter_egg_id == easter_egg_id
+        for conversation in game_state.private_conversations
+    )
+
+
+def build_triggered_easter_egg_reply(
+    npc: CharacterState,
+    easter_egg: TriggerEasterEgg,
+    first_time: bool,
+) -> str:
+    template = easter_egg.reply if first_time else easter_egg.repeat_reply
+    return template.replace("{role}", ROLE_LABELS.get(npc.role, npc.role))
 
 
 def has_effective_private_question(game_state: WolfGameState, npc_character_id: int) -> bool:
@@ -5336,6 +5446,8 @@ def generate_private_chat_llm_text(
     question: str,
     rule_text: str,
     rag_context: list[dict[str, object]],
+    required_self_role: Optional[str] = None,
+    easter_egg_id: str = "",
 ) -> LLMGeneration:
     if not game_state.llm_enabled:
         return rule_llm_generation(rule_text, "LLM is disabled for this game")
@@ -5353,6 +5465,7 @@ def generate_private_chat_llm_text(
         "player_question": question,
         "rule_text": rule_text,
         "safe_evidence": build_llm_safe_evidence(rag_context),
+        "authorized_easter_egg": easter_egg_id or None,
     }
     system_prompt = (
         "你是狼人杀 NPC 的私聊表达层。rule_text 是后端批准的完整事实边界。"
@@ -5361,12 +5474,18 @@ def generate_private_chat_llm_text(
         "可以自然使用 voice_profile 中的表达习惯，但不要为了玩梗牺牲回答信息。"
         "只返回 JSON 对象，格式为 {\"text\": \"回答\"}。"
     )
+    if required_self_role is not None:
+        system_prompt += (
+            " 本次 authorized_easter_egg 允许 NPC 私下透露且必须保留自己的真实身份；"
+            "只允许透露 validation_contract.required_self_role，不得透露任何其他隐藏身份。"
+        )
     return generate_validated_llm_rewrite(
         system_prompt,
         context,
         rule_text,
         game_state,
         speaker=npc,
+        required_self_role=required_self_role,
     )
 
 
@@ -5379,6 +5498,7 @@ def generate_validated_llm_rewrite(
     required_target: Optional[CharacterState] = None,
     required_claims: Optional[list[PublicClaimState]] = None,
     public_text: bool = False,
+    required_self_role: Optional[str] = None,
 ) -> LLMGeneration:
     validation_contract = build_llm_validation_contract(
         game_state,
@@ -5387,6 +5507,7 @@ def generate_validated_llm_rewrite(
         required_target,
         required_claims or [],
         public_text,
+        required_self_role,
     )
     base_context = dict(context)
     base_context["validation_contract"] = validation_contract
@@ -5443,6 +5564,7 @@ def generate_validated_llm_rewrite(
             required_target=required_target,
             required_claims=required_claims,
             public_text=public_text,
+            required_self_role=required_self_role,
         )
         if validation.used_llm:
             attempts.append(
@@ -5512,6 +5634,7 @@ def build_llm_validation_contract(
     required_target: Optional[CharacterState],
     required_claims: list[PublicClaimState],
     public_text: bool,
+    required_self_role: Optional[str] = None,
 ) -> dict[str, object]:
     allowed_role_claims = get_allowed_self_role_claims(
         game_state,
@@ -5519,6 +5642,8 @@ def build_llm_validation_contract(
         rule_text,
         required_claims,
     )
+    if required_self_role is not None:
+        allowed_role_claims = {required_self_role}
     return {
         "required_target": build_character_validation_contract(
             game_state,
@@ -5533,6 +5658,11 @@ def build_llm_validation_contract(
             ROLE_LABELS.get(role, role)
             for role in sorted(allowed_role_claims)
         ],
+        "required_self_role": (
+            ROLE_LABELS.get(required_self_role, required_self_role)
+            if required_self_role is not None
+            else None
+        ),
         "public_text": public_text,
         "policy": (
             "Preserve each structured fact. Natural synonymous wording is allowed; "
@@ -5731,12 +5861,17 @@ def validate_llm_rewrite(
     required_target: Optional[CharacterState] = None,
     required_claims: Optional[list[PublicClaimState]] = None,
     public_text: bool = False,
+    required_self_role: Optional[str] = None,
 ) -> LLMGeneration:
     if not result.used_llm:
         return result
 
     candidate = " ".join(result.text.split()).strip()
     rejection_reasons: list[str] = []
+    if required_self_role is not None and (
+        speaker is None or speaker.role != required_self_role
+    ):
+        rejection_reasons.append("LLM private role-reveal authorization is invalid")
     if not candidate or len(candidate) > 320:
         rejection_reasons.append("LLM text length is invalid")
     if "\ufffd" in candidate:
@@ -5769,11 +5904,15 @@ def validate_llm_rewrite(
         rule_text,
         claims,
     )
+    if required_self_role is not None:
+        allowed_roles = {required_self_role}
     required_roles = {
         claim.claimed_role
         for claim in claims
         if claim.claim_type == "role" and claim.claimed_role
     }
+    if required_self_role is not None:
+        required_roles.add(required_self_role)
     for role in sorted(required_roles - candidate_roles):
         rejection_reasons.append(
             f"LLM text omitted required self role claim: {ROLE_LABELS.get(role, role)}"
@@ -5923,7 +6062,7 @@ def extract_self_role_claims(text: str) -> set[str]:
     patterns = [
         rf"我\s*(?:是|就是|身份是|的身份是|拿到的是|底牌是)\s*({role_group})",
         rf"我\s*(?:起跳|跳|报|拍|认)\s*(?:一张|一个)?\s*({role_group})",
-        rf"我\s*(?:继续)?\s*以\s*({role_group})\s*(?:身份|视角|牌)",
+        rf"我\s*(?:(?:也|仍|还)\s*)?(?:继续\s*)?以\s*({role_group})\s*(?:身份|视角|牌)",
         rf"({role_group})\s*(?:牌)?\s*(?:在这里|在这儿|是我)",
     ]
     labels = {
