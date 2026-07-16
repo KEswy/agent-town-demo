@@ -1,0 +1,113 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/npc.gd" id="1_npc_script"]
+[ext_resource type="Texture2D" path="res://assets/ui/police_badge.svg" id="2_police_badge"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_interaction"]
+radius = 72.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_speech_hint"]
+bg_color = Color(1, 0.96, 0.78, 0.94)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.22, 0.18, 0.12, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="NPC" type="Area2D"]
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("1_npc_script")
+
+[node name="Body" type="Polygon2D" parent="."]
+color = Color(0.95, 0.58, 0.2, 1)
+polygon = PackedVector2Array(0, -18, 13, -8, 13, 10, 0, 18, -13, 10, -13, -8)
+
+[node name="CharacterSprite" type="Sprite2D" parent="."]
+position = Vector2(0, -5)
+texture_filter = 1
+
+[node name="SheriffBadge" type="Polygon2D" parent="."]
+visible = false
+position = Vector2(21, -34)
+color = Color(1, 0.76, 0.12, 1)
+polygon = PackedVector2Array(-8, 6, -8, -3, -4, 1, 0, -6, 4, 1, 8, -3, 8, 6)
+
+[node name="CampaignBadge" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(-24, -42)
+scale = Vector2(0.68, 0.68)
+texture_filter = 1
+texture = ExtResource("2_police_badge")
+
+[node name="CampaignPKLabel" type="Label" parent="."]
+visible = false
+offset_left = -40.0
+offset_top = -68.0
+offset_right = -8.0
+offset_bottom = -42.0
+theme_override_colors/font_color = Color(1, 0.86, 0.28, 1)
+theme_override_colors/font_outline_color = Color(0.12, 0.1, 0.05, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 17
+text = "PK"
+horizontal_alignment = 1
+
+[node name="NearbyMarker" type="Polygon2D" parent="."]
+visible = false
+position = Vector2(0, -34)
+color = Color(1, 0.9, 0.32, 1)
+polygon = PackedVector2Array(0, -7, 7, 0, 0, 7, -7, 0)
+
+[node name="TurnIndicator" type="Polygon2D" parent="."]
+visible = false
+position = Vector2(18, -56)
+color = Color(1, 0.72, 0.08, 1)
+polygon = PackedVector2Array(-11, -12, 11, -12, 11, -3, 5, -3, 5, 10, -5, 10, -5, -3, -11, -3)
+
+[node name="SpeechHint" type="Node2D" parent="."]
+visible = false
+
+[node name="Bubble" type="Panel" parent="SpeechHint"]
+offset_left = -22.0
+offset_top = -72.0
+offset_right = 22.0
+offset_bottom = -46.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_speech_hint")
+
+[node name="Tail" type="Polygon2D" parent="SpeechHint"]
+position = Vector2(0, -43)
+color = Color(1, 0.96, 0.78, 0.94)
+polygon = PackedVector2Array(-5, -5, 5, -5, 0, 2)
+
+[node name="DotLeft" type="Polygon2D" parent="SpeechHint"]
+position = Vector2(-10, -59)
+color = Color(0.22, 0.18, 0.12, 1)
+polygon = PackedVector2Array(0, -2.5, 2.5, 0, 0, 2.5, -2.5, 0)
+
+[node name="DotMiddle" type="Polygon2D" parent="SpeechHint"]
+position = Vector2(0, -59)
+color = Color(0.22, 0.18, 0.12, 1)
+polygon = PackedVector2Array(0, -2.5, 2.5, 0, 0, 2.5, -2.5, 0)
+
+[node name="DotRight" type="Polygon2D" parent="SpeechHint"]
+position = Vector2(10, -59)
+color = Color(0.22, 0.18, 0.12, 1)
+polygon = PackedVector2Array(0, -2.5, 2.5, 0, 0, 2.5, -2.5, 0)
+
+[node name="NameLabel" type="Label" parent="."]
+offset_left = -80.0
+offset_top = 30.0
+offset_right = 80.0
+offset_bottom = 78.0
+theme_override_colors/font_color = Color(0.08, 0.08, 0.08, 1)
+theme_override_font_sizes/font_size = 13
+text = "Guide"
+horizontal_alignment = 1
+
+[node name="InteractionRange" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_interaction")

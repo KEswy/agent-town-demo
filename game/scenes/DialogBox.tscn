@@ -1,0 +1,135 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/dialog_box.gd" id="1_dialog_script"]
+[ext_resource type="FontFile" path="res://assets/fonts/NotoSansSC-Variable.ttf" id="2_dialog_font"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.08, 0.09, 0.1, 0.94)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.92, 0.78, 0.42, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="Theme" id="Theme_dialog_cjk"]
+default_font = ExtResource("2_dialog_font")
+
+[node name="DialogBox" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = SubResource("Theme_dialog_cjk")
+script = ExtResource("1_dialog_script")
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 32.0
+offset_top = -390.0
+offset_right = -32.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 14
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Portrait" type="TextureRect" parent="Panel/Margin/VBox"]
+custom_minimum_size = Vector2(76, 76)
+layout_mode = 2
+texture_filter = 1
+expand_mode = 3
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.84, 0.45, 1)
+theme_override_font_sizes/font_size = 18
+text = "Guide"
+
+[node name="MemoryLabel" type="Label" parent="Panel/Margin/VBox"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.82, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "记忆次数：第 1 次对话\n关系阶段：初次见面"
+
+[node name="KnowledgeLabel" type="Label" parent="Panel/Margin/VBox"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.66, 0.9, 0.96, 1)
+theme_override_font_sizes/font_size = 14
+text = "命中知识：\n1. Godot 负责 2D 交互\n2. 玩家移动输入"
+autowrap_mode = 3
+
+[node name="TextScroll" type="ScrollContainer" parent="Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 112)
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="TextLabel" type="Label" parent="Panel/Margin/VBox/TextScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.96, 0.96, 0.92, 1)
+theme_override_font_sizes/font_size = 20
+text = "你好，我是第一个 AI NPC。后面我会接入记忆和知识库。"
+autowrap_mode = 3
+
+[node name="InputRow" type="HBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MessageInput" type="LineEdit" parent="Panel/Margin/VBox/InputRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "输入问题，例如：Godot 负责什么"
+
+[node name="SendButton" type="Button" parent="Panel/Margin/VBox/InputRow"]
+layout_mode = 2
+text = "发送"
+
+[node name="ActionRow" type="HBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ViewMemoryButton" type="Button" parent="Panel/Margin/VBox/ActionRow"]
+layout_mode = 2
+text = "查看记忆"
+
+[node name="ResetMemoryButton" type="Button" parent="Panel/Margin/VBox/ActionRow"]
+layout_mode = 2
+text = "清空记忆"
+
+[node name="ReloadConfigButton" type="Button" parent="Panel/Margin/VBox/ActionRow"]
+layout_mode = 2
+text = "重载配置"
+
+[node name="ValidationFailureButton" type="Button" parent="Panel/Margin/VBox/ActionRow"]
+visible = false
+layout_mode = 2
+text = "LLM校验失败查看"
+
+[node name="CloseButton" type="Button" parent="Panel/Margin/VBox/ActionRow"]
+layout_mode = 2
+text = "关闭"

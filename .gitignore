@@ -1,0 +1,13 @@
+.DS_Store
+.env
+backend/.env
+game/.godot/
+game/**/*.uid
+backend/.venv/
+backend/data/
+*.sqlite3
+*.db
+chroma_db/
+vector_store/
+__pycache__/
+*.pyc

@@ -1,0 +1,55 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/player.gd" id="1_player_script"]
+[ext_resource type="Texture2D" path="res://assets/characters/player.svg" id="2_player_skin"]
+[ext_resource type="Texture2D" path="res://assets/ui/police_badge.svg" id="3_police_badge"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_player"]
+radius = 14.0
+
+[node name="Player" type="CharacterBody2D"]
+script = ExtResource("1_player_script")
+
+[node name="Body" type="Polygon2D" parent="."]
+visible = false
+color = Color(0.18, 0.45, 0.9, 1)
+polygon = PackedVector2Array(0, -18, 15, 12, 0, 18, -15, 12)
+
+[node name="CharacterSprite" type="Sprite2D" parent="."]
+position = Vector2(0, -5)
+texture_filter = 1
+texture = ExtResource("2_player_skin")
+
+[node name="SheriffBadge" type="Polygon2D" parent="."]
+visible = false
+position = Vector2(21, -34)
+color = Color(1, 0.76, 0.12, 1)
+polygon = PackedVector2Array(-8, 6, -8, -3, -4, 1, 0, -6, 4, 1, 8, -3, 8, 6)
+
+[node name="CampaignBadge" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(-24, -42)
+scale = Vector2(0.68, 0.68)
+texture_filter = 1
+texture = ExtResource("3_police_badge")
+
+[node name="CampaignPKLabel" type="Label" parent="."]
+visible = false
+offset_left = -40.0
+offset_top = -68.0
+offset_right = -8.0
+offset_bottom = -42.0
+theme_override_colors/font_color = Color(1, 0.86, 0.28, 1)
+theme_override_colors/font_outline_color = Color(0.12, 0.1, 0.05, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 17
+text = "PK"
+horizontal_alignment = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_player")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+enabled = true
+position_smoothing_enabled = true
+position_smoothing_speed = 6.0

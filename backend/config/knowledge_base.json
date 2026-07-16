@@ -1,0 +1,644 @@
+[
+  {
+    "npc_name": "Guide",
+    "title": "Godot 负责 2D 交互",
+    "content": "Godot 4 项目负责玩家移动、摄像机跟随、NPC 交互和对话框显示。",
+    "keywords": ["Godot", "移动", "摄像机", "NPC", "对话框"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "Python 后端职责",
+    "content": "Python FastAPI 后端负责 NPC 对话、人设配置、知识检索和记忆保存。",
+    "keywords": ["Python", "FastAPI", "后端", "记忆", "人设"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "玩家移动输入",
+    "content": "玩家移动由 Godot 输入动作控制，支持 WASD 和方向键，移动方向会归一化，斜向移动不会更快。",
+    "keywords": ["玩家", "移动", "WASD", "方向键", "输入"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "摄像机跟随玩家",
+    "content": "Camera2D 放在 Player 节点下面，启用后会跟随玩家移动，让玩家始终保持在视野中心附近。",
+    "keywords": ["摄像机", "Camera2D", "跟随", "玩家", "视野"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "NPC 交互范围",
+    "content": "NPC 使用 Area2D 和 CollisionShape2D 检测玩家是否靠近，玩家进入范围后才能按 E 打开对话框。",
+    "keywords": ["NPC", "交互", "Area2D", "CollisionShape2D", "靠近"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "对话框输入流程",
+    "content": "靠近 NPC 按 E 后会打开对话框，玩家需要在输入框里输入问题，再点击发送或按 Enter 发送给后端。",
+    "keywords": ["对话框", "输入框", "发送", "Enter", "问题"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "对话框关闭方式",
+    "content": "对话框可以通过关闭按钮或 Esc 关闭，关闭后输入框会释放焦点，玩家移动恢复正常。",
+    "keywords": ["关闭", "Esc", "焦点", "输入框", "移动"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "对话时暂停玩家移动",
+    "content": "对话框打开时会加入 dialog_open 分组，Player 脚本检测到该分组后会暂停移动，避免输入 WASD 时角色乱走。",
+    "keywords": ["暂停", "移动", "dialog_open", "WASD", "输入"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "Godot HTTPRequest 节点",
+    "content": "Godot 通过 HTTPRequest 节点请求 FastAPI，聊天、清空记忆和重载配置分别使用不同的请求节点。",
+    "keywords": ["HTTPRequest", "Godot", "FastAPI", "请求", "节点"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "主场景结构",
+    "content": "Main.tscn 负责组织地面、玩家、多个 NPC、CanvasLayer UI、聊天请求节点和配置重载请求节点。",
+    "keywords": ["Main.tscn", "场景", "玩家", "UI", "请求"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "NPC 名称匹配规则",
+    "content": "Godot 场景里的 npc_name 必须和后端配置文件中的 npc_name 一致，后端才会使用对应的人设和知识。",
+    "keywords": ["npc_name", "匹配", "配置", "人设", "后端"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "清空记忆按钮",
+    "content": "Godot 对话框里的清空记忆按钮会调用 DELETE /memory/player/{npc_name}，只清空当前 NPC 对默认玩家的记忆。",
+    "keywords": ["清空记忆", "DELETE", "memory", "按钮", "玩家"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "重载配置按钮",
+    "content": "Godot 对话框里的重载配置按钮会调用 POST /admin/reload-config，让后端重新读取 NPC 人设和知识库。",
+    "keywords": ["重载配置", "reload-config", "人设", "知识库", "按钮"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "知识命中显示",
+    "content": "后端返回 knowledge_title 后，Godot 对话框会显示命中知识标题，方便测试当前问题是否检索到知识。",
+    "keywords": ["knowledge_title", "命中知识", "显示", "检索", "标题"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "运行 Godot 项目",
+    "content": "运行游戏时需要用 Godot 4 打开 game/project.godot，然后运行主场景 Main.tscn。",
+    "keywords": ["运行", "Godot", "project.godot", "Main.tscn", "游戏"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "运行 FastAPI 后端",
+    "content": "运行后端时进入 backend 目录，激活虚拟环境后执行 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000。",
+    "keywords": ["运行", "FastAPI", "uvicorn", "backend", "8000"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "后端未启动时的表现",
+    "content": "如果 Python 后端没有启动，Godot 会显示本地兜底对白或连接失败提示，避免游戏直接卡死。",
+    "keywords": ["后端", "未启动", "兜底", "失败", "提示"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "发送真实问题",
+    "content": "Godot 曾经固定发送“你好”，现在已经改为发送输入框里的真实问题，这样知识检索才能根据问题命中。",
+    "keywords": ["真实问题", "你好", "输入框", "检索", "发送"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "交互键说明",
+    "content": "玩家靠近 NPC 后按 E 打开对话框；对话框打开后，Enter 用于发送输入框内容，Esc 用于关闭。",
+    "keywords": ["E", "Enter", "Esc", "交互键", "对话框"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "Top-K 知识检索",
+    "content": "后端知识检索会按分数返回 Top-K 候选，/chat 默认引用前 2 条命中的知识。",
+    "keywords": ["Top-K", "知识检索", "候选", "分数", "chat"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "检索分数规则",
+    "content": "关键词命中会获得较高分数，标题命中和内容词命中也会加分，最终按分数降序返回候选知识。",
+    "keywords": ["分数", "关键词", "标题", "内容", "排序"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "调试检索接口",
+    "content": "GET /knowledge/search 可以测试某句话会命中哪些知识，并返回 matched、score、item 和 results，不会写入记忆。",
+    "keywords": ["knowledge/search", "调试", "matched", "score", "results"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "配置热重载不会清空记忆",
+    "content": "POST /admin/reload-config 只重新加载 NPC 人设和知识库，不会删除 backend/data/memory.json 中的对话记忆。",
+    "keywords": ["热重载", "reload-config", "记忆", "memory.json", "配置"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "新增 NPC 的流程",
+    "content": "新增 NPC 时，需要在 backend/config/npc_profiles.json 添加人设，并在 Godot Main.tscn 中实例化 NPC 节点并设置相同 npc_name。",
+    "keywords": ["新增", "NPC", "npc_profiles", "Main.tscn", "npc_name"]
+  },
+  {
+    "npc_name": "Guide",
+    "title": "新增知识的流程",
+    "content": "新增知识时，需要在 backend/config/knowledge_base.json 添加 npc_name、title、content 和 keywords，再调用热重载接口生效。",
+    "keywords": ["新增", "知识", "knowledge_base", "keywords", "热重载"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "资料馆的作用",
+    "content": "资料馆会整理小镇知识、NPC 人设和玩家对话历史，未来可以升级成真正的 RAG 知识库。",
+    "keywords": ["资料馆", "知识", "人设", "历史", "RAG"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "记忆文件位置",
+    "content": "当前 NPC 记忆保存在 backend/data/memory.json，后端重启后会自动读取这个文件。",
+    "keywords": ["记忆", "memory.json", "保存", "重启", "文件"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "记忆文件结构",
+    "content": "memory.json 以 player_id 和 npc_name 组合成 key，每个 key 下保存该玩家与该 NPC 的对话历史。",
+    "keywords": ["memory.json", "结构", "player_id", "npc_name", "历史"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "最近记忆引用",
+    "content": "第二次及之后和同一个 NPC 对话时，后端会引用玩家上一次对这个 NPC 说过的话。",
+    "keywords": ["最近记忆", "引用", "上次", "对话", "NPC"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "不同 NPC 记忆隔离",
+    "content": "Guide 和 Archivist 的记忆互相独立，同一个玩家和不同 NPC 对话时不会串记忆。",
+    "keywords": ["记忆隔离", "Guide", "Archivist", "独立", "串记忆"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "清空单个 NPC 记忆",
+    "content": "DELETE /memory/{player_id}/{npc_name} 只删除指定玩家和指定 NPC 的对话记录，不影响其他 NPC。",
+    "keywords": ["DELETE", "单个", "NPC", "清空", "记忆"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "清空玩家全部记忆",
+    "content": "DELETE /memory/{player_id} 会删除某个玩家与所有 NPC 的记忆，适合重置单个玩家测试状态。",
+    "keywords": ["DELETE", "玩家", "全部", "记忆", "重置"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "清空全部记忆",
+    "content": "DELETE /memory 会清空所有玩家与所有 NPC 的记忆，适合彻底重置本地 Demo。",
+    "keywords": ["DELETE", "全部", "清空", "Demo", "重置"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "内存和文件的关系",
+    "content": "后端运行时会把记忆加载到 MEMORY_STORE，修改记忆后再写回 backend/data/memory.json。",
+    "keywords": ["MEMORY_STORE", "内存", "文件", "写回", "加载"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "线程锁保护记忆",
+    "content": "后端使用 Lock 保护 MEMORY_STORE，避免多个请求同时修改记忆时导致计数或写入混乱。",
+    "keywords": ["Lock", "线程锁", "并发", "MEMORY_STORE", "计数"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "配置文件热重载",
+    "content": "热重载会重新读取 npc_profiles.json 和 knowledge_base.json，适合边改配置边测试。",
+    "keywords": ["热重载", "配置文件", "npc_profiles", "knowledge_base", "测试"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "人设配置文件",
+    "content": "npc_profiles.json 存放 NPC 名称、身份、性格和基础知识，是后端生成回复的重要配置。",
+    "keywords": ["npc_profiles", "人设", "身份", "性格", "基础知识"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "知识库配置文件",
+    "content": "knowledge_base.json 存放知识条目，每条包含 npc_name、title、content 和 keywords。",
+    "keywords": ["knowledge_base", "知识库", "title", "content", "keywords"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "通用知识条目",
+    "content": "知识条目的 npc_name 可以写 *，表示所有 NPC 都可以检索到这条知识。",
+    "keywords": ["通用", "星号", "*", "npc_name", "检索"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "知识检索调试",
+    "content": "/knowledge/search 不会写入记忆，因此适合反复测试关键词、分数和候选知识列表。",
+    "keywords": ["knowledge/search", "调试", "关键词", "候选", "记忆"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "Top-K 候选列表",
+    "content": "Top-K 检索会返回多个候选知识和分数，便于观察为什么某条知识被选中。",
+    "keywords": ["Top-K", "候选", "分数", "知识", "选择"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "向量 RAG 的下一步",
+    "content": "未来可以把关键词检索替换为向量检索，用 embedding 表示问题和知识，再按相似度召回内容。",
+    "keywords": ["向量", "RAG", "embedding", "相似度", "召回"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "真实 LLM 的下一步",
+    "content": "未来可以把当前模板回复替换为真实 LLM 调用，把 NPC 人设、最近记忆和检索知识一起放入提示词。",
+    "keywords": ["LLM", "提示词", "模板", "人设", "检索知识"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "数据库记忆的下一步",
+    "content": "当前记忆保存在 JSON 文件里，未来可以升级为 SQLite、PostgreSQL 或向量数据库。",
+    "keywords": ["数据库", "SQLite", "PostgreSQL", "JSON", "向量数据库"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "NPC 记忆和知识的区别",
+    "content": "记忆来自玩家和 NPC 的历史对话，知识来自预先配置的知识库，两者会一起影响回复。",
+    "keywords": ["记忆", "知识", "区别", "历史对话", "回复"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "资料管理员人设",
+    "content": "Archivist 是资料管理员，偏向解释资料馆、知识库、记忆和配置文件相关问题。",
+    "keywords": ["Archivist", "资料管理员", "资料馆", "知识库", "配置"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "小镇向导人设",
+    "content": "Guide 是小镇向导，偏向解释 Godot 交互、玩家操作、运行方式和 Demo 当前功能。",
+    "keywords": ["Guide", "小镇向导", "Godot", "操作", "功能"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "记忆计数的意义",
+    "content": "memory_count 表示当前玩家和当前 NPC 已经发生过多少次对话，用于展示 NPC 的连续记忆感。",
+    "keywords": ["memory_count", "计数", "连续", "记忆感", "对话"]
+  },
+  {
+    "npc_name": "Archivist",
+    "title": "知识标题返回",
+    "content": "后端会返回 knowledge_title 和 knowledge_titles，Godot 先展示第一条命中的知识标题。",
+    "keywords": ["knowledge_title", "knowledge_titles", "标题", "Godot", "展示"]
+  },
+  {
+    "npc_name": "*",
+    "title": "当前 Demo 阶段",
+    "content": "当前 Demo 已经支持 Godot 2D 交互、FastAPI 对话、多 NPC 人设、JSON 持久化记忆和 Top-K 知识检索。",
+    "keywords": ["Demo", "阶段", "功能", "当前", "进度"]
+  },
+  {
+    "npc_name": "*",
+    "title": "项目学习目标",
+    "content": "这个项目的学习目标是逐步构建 Godot 4 + Python FastAPI + RAG 的 AI NPC Demo。",
+    "keywords": ["学习目标", "Godot", "FastAPI", "RAG", "AI NPC"]
+  },
+  {
+    "npc_name": "*",
+    "title": "最小可运行原则",
+    "content": "项目遵循最小可运行原则，每一步先做可测试的小功能，再逐步扩展。",
+    "keywords": ["最小可运行", "MVP", "测试", "扩展", "原则"]
+  },
+  {
+    "npc_name": "*",
+    "title": "前后端职责划分",
+    "content": "Godot 负责 2D 交互和 UI，Python 后端负责对话、人设、知识检索和记忆。",
+    "keywords": ["前后端", "职责", "Godot", "Python", "UI"]
+  },
+  {
+    "npc_name": "*",
+    "title": "本地开发地址",
+    "content": "后端默认运行在 http://127.0.0.1:8000，Godot 会向这个地址发送 HTTP 请求。",
+    "keywords": ["127.0.0.1", "8000", "本地", "HTTP", "地址"]
+  },
+  {
+    "npc_name": "*",
+    "title": "健康检查接口",
+    "content": "GET /health 用于确认后端是否启动成功，正常时返回 status ok。",
+    "keywords": ["health", "健康检查", "后端", "启动", "status"]
+  },
+  {
+    "npc_name": "*",
+    "title": "NPC 列表接口",
+    "content": "GET /npcs 会返回当前后端加载到的所有 NPC 人设配置。",
+    "keywords": ["npcs", "列表", "人设", "配置", "接口"]
+  },
+  {
+    "npc_name": "*",
+    "title": "知识列表接口",
+    "content": "GET /knowledge 会返回当前后端加载到的全部知识库条目。",
+    "keywords": ["knowledge", "知识列表", "知识库", "接口", "条目"]
+  },
+  {
+    "npc_name": "*",
+    "title": "聊天接口",
+    "content": "POST /chat 是 Godot 对话框调用的主要接口，会返回 NPC 回复、记忆次数和知识命中标题。",
+    "keywords": ["chat", "聊天接口", "回复", "记忆次数", "知识命中"]
+  },
+  {
+    "npc_name": "*",
+    "title": "测试 curl 命令",
+    "content": "README 中提供了 curl 示例，可以直接测试健康检查、知识检索、聊天、重载配置和清空记忆。",
+    "keywords": ["curl", "测试", "README", "命令", "接口"]
+  },
+  {
+    "npc_name": "*",
+    "title": "虚拟环境说明",
+    "content": "后端建议使用 python3 -m venv .venv 创建虚拟环境，再安装 requirements.txt 中的依赖。",
+    "keywords": ["venv", "虚拟环境", "requirements", "依赖", "Python"]
+  },
+  {
+    "npc_name": "*",
+    "title": "FastAPI 自动文档",
+    "content": "后端启动后，可以访问 http://127.0.0.1:8000/docs 查看 FastAPI 自动生成的接口文档。",
+    "keywords": ["FastAPI", "docs", "接口文档", "自动文档", "Swagger"]
+  },
+  {
+    "npc_name": "*",
+    "title": "本地运行数据",
+    "content": "backend/data/ 是本地运行数据目录，已加入 .gitignore，不建议提交玩家测试记忆。",
+    "keywords": ["backend/data", "gitignore", "本地数据", "记忆", "提交"]
+  },
+  {
+    "npc_name": "*",
+    "title": "知识条目关键词",
+    "content": "keywords 应该包含玩家可能输入的词，例如 Godot、记忆、资料馆、FastAPI、RAG 等。",
+    "keywords": ["keywords", "玩家输入", "Godot", "FastAPI", "RAG"]
+  },
+  {
+    "npc_name": "*",
+    "title": "知识条目标题",
+    "content": "title 应该短而清楚，Godot 对话框会显示第一条命中知识的标题。",
+    "keywords": ["title", "标题", "Godot", "命中知识", "显示"]
+  },
+  {
+    "npc_name": "*",
+    "title": "知识条目内容",
+    "content": "content 应该用一两句话解释清楚一个概念，方便 NPC 回复时引用。",
+    "keywords": ["content", "内容", "解释", "概念", "引用"]
+  },
+  {
+    "npc_name": "*",
+    "title": "开发调试顺序",
+    "content": "调试时可以先用 /knowledge/search 看检索，再用 /chat 看回复，最后在 Godot 里验证 UI 展示。",
+    "keywords": ["调试", "knowledge/search", "chat", "Godot", "UI"]
+  },
+  {
+    "npc_name": "*",
+    "title": "后端重启影响",
+    "content": "后端重启会重新读取配置和 memory.json，因此已经保存的记忆不会丢失。",
+    "keywords": ["后端", "重启", "配置", "memory.json", "不会丢失"]
+  },
+  {
+    "npc_name": "*",
+    "title": "狼人杀阵营胜利条件",
+    "content": "好人阵营需要放逐全部狼人；当存活狼人数不少于存活非狼人数时，狼人阵营获胜。",
+    "keywords": ["狼人杀", "胜利条件", "好人", "狼人", "阵营"]
+  },
+  {
+    "npc_name": "*",
+    "title": "狼人夜间击杀",
+    "content": "狼人每晚选择一名非狼人目标进行袭击，如果目标没有获得有效保护，目标会在天亮时出局。",
+    "keywords": ["狼人", "夜晚", "袭击", "狼刀", "出局"]
+  },
+  {
+    "npc_name": "*",
+    "title": "预言家查验能力",
+    "content": "预言家每晚可以查验一名存活角色，得到狼人或好人的阵营结果；查验结果默认属于预言家的私有信息。",
+    "keywords": ["预言家", "查验", "验人", "身份", "私有信息"]
+  },
+  {
+    "npc_name": "*",
+    "title": "守卫保护能力",
+    "content": "守卫每晚可以保护一名仍在场的角色，也可以守护自己，但不能连续两晚守护同一目标。单独守中狼刀时目标不会出局；如果女巫同夜也对该目标使用解药，同守同救会导致保护失效。",
+    "keywords": ["守卫", "守护", "保护", "挡刀", "平安夜"]
+  },
+  {
+    "npc_name": "*",
+    "title": "小镇会议发言顺序",
+    "content": "没有警长时，夜晚结算后随机决定第一位发言者和顺时针或逆时针方向；有警长时由警长根据前夜出局情况选择发言侧。无论哪种方式，存活角色都按固定座次逐个完成公开发言。",
+    "keywords": ["小镇会议", "发言顺序", "顺时针", "逆时针", "座次", "警长"]
+  },
+  {
+    "npc_name": "*",
+    "title": "前序发言影响",
+    "content": "先发言角色提出的怀疑和线索会改变后续 NPC 的怀疑状态，因此后发言者会结合已经公开的内容调整判断。",
+    "keywords": ["前序发言", "后续发言", "影响", "怀疑", "判断"]
+  },
+  {
+    "npc_name": "*",
+    "title": "会后自由活动",
+    "content": "所有存活角色完成公开发言后进入自由活动，玩家可以走近存活 NPC 进行私密追问，然后手动结束自由活动并进入投票。",
+    "keywords": ["自由活动", "会后", "私密追问", "结束自由活动", "投票"]
+  },
+  {
+    "npc_name": "*",
+    "title": "私密追问决策规则",
+    "content": "每名 NPC 每天第一次私密追问会影响其怀疑、信任和投票倾向；同一天的后续追问可以得到回答，但不会再次修改决策。",
+    "keywords": ["私密追问", "第一次", "信任", "怀疑", "决策"]
+  },
+  {
+    "npc_name": "*",
+    "title": "公开信息与私有信息",
+    "content": "会议发言和投票属于公开信息；私密追问、预言家查验和 NPC 内部记忆属于受限信息，不能通过公共日志泄露。",
+    "keywords": ["公开信息", "私有信息", "公共日志", "查验", "内部记忆"]
+  },
+  {
+    "npc_name": "*",
+    "title": "白天投票放逐",
+    "content": "自由活动结束后进入投票。存活角色各自选择一名其他存活角色，最高票角色被放逐，平票时从最高票目标中随机选择。",
+    "keywords": ["投票", "放逐", "最高票", "平票", "存活角色"]
+  },
+  {
+    "npc_name": "*",
+    "title": "狼人伪装与误导",
+    "content": "狼人互相知道狼队友身份，夜间不会袭击队友。白天可以低调掩护、转移焦点，也可能在队友承受高压时主动切割或投票卖掉队友来换取可信度。",
+    "keywords": ["狼人", "伪装", "误导", "狼队友", "转移焦点"]
+  },
+  {
+    "npc_name": "*",
+    "title": "神职信息披露",
+    "content": "预言家和守卫不应轻易公开全部夜间信息。是否向玩家透露内容，需要结合关系信任、角色性格和当前局势。",
+    "keywords": ["神职", "预言家", "守卫", "透露", "信任"]
+  },
+  {
+    "npc_name": "*",
+    "title": "狼人杀固定人物座次",
+    "content": "12 人逻辑座次固定为玩家、梅西、C罗、周深、梅长苏、塞尔达、小骑士、大黄蜂、喜羊羊、懒羊羊、洛洛、奇异博士；人物和性格固定，但每局身份都会重新随机。",
+    "keywords": ["12人", "座次", "梅西", "C罗", "小骑士", "大黄蜂", "喜羊羊", "懒羊羊", "洛洛", "奇异博士"]
+  },
+  {
+    "npc_name": "梅西",
+    "title": "梅西的判断风格",
+    "content": "梅西是沉稳的观察者，重视证据和发言一致性，在信息不足时倾向于保留意见。",
+    "keywords": ["梅西", "性格", "沉稳", "证据", "观察"]
+  },
+  {
+    "npc_name": "C罗",
+    "title": "C罗的判断风格",
+    "content": "C罗是自信的行动派，倾向于明确表达怀疑并推动投票，但强势表态也可能引起其他角色注意。",
+    "keywords": ["C罗", "性格", "自信", "行动派", "推动投票"]
+  },
+  {
+    "npc_name": "周深",
+    "title": "周深的判断风格",
+    "content": "周深是敏锐的倾听者，会关注语气变化、关系和情绪，但不会只凭情绪直接确定身份。",
+    "keywords": ["周深", "性格", "倾听", "语气", "情绪"]
+  },
+  {
+    "npc_name": "梅长苏",
+    "title": "梅长苏的判断风格",
+    "content": "梅长苏谨慎而重视逻辑，会综合发言顺序、公开票型和跨轮记忆寻找矛盾。",
+    "keywords": ["梅长苏", "性格", "逻辑", "票型", "跨轮记忆"]
+  },
+  {
+    "npc_name": "塞尔达",
+    "title": "塞尔达的判断风格",
+    "content": "塞尔达勇敢而稳健，更相信可以验证的行动结果，也会警惕无法验证的身份承诺。",
+    "keywords": ["塞尔达", "性格", "勇敢", "行动结果", "身份承诺"]
+  },
+  {
+    "npc_name": "*",
+    "title": "十二人预女猎守身份配置",
+    "content": "本局固定为 1 名玩家和 11 名 NPC，身份包括 4 名狼人、4 名村民，以及预言家、女巫、猎人、守卫各 1 名。",
+    "keywords": ["12人", "十二人", "预女猎守", "身份配置", "四狼", "四民"]
+  },
+  {
+    "npc_name": "*",
+    "title": "女巫药品规则",
+    "content": "女巫拥有一瓶解药和一瓶毒药，每瓶整局只能使用一次，每晚最多使用一瓶。第一夜可以自救，之后不能自救。女巫会看到本夜狼刀目标。",
+    "keywords": ["女巫", "解药", "毒药", "自救", "刀口", "每晚一瓶"]
+  },
+  {
+    "npc_name": "*",
+    "title": "猎人开枪规则",
+    "content": "猎人被狼人袭击出局或被白天投票放逐出局时，可以选择带走一名仍在场的角色，也可以不开枪；被女巫毒药出局时不能开枪。",
+    "keywords": ["猎人", "开枪", "带走", "毒药", "放逐", "出局"]
+  },
+  {
+    "npc_name": "*",
+    "title": "十二人屠边胜利条件",
+    "content": "所有狼人出局时好人阵营胜利；四名村民全部出局，或预言家、女巫、猎人、守卫四名神职全部出局时，狼人阵营胜利。",
+    "keywords": ["屠边", "胜利条件", "村民", "神职", "狼人", "出局"]
+  },
+  {
+    "npc_name": "小骑士",
+    "title": "小骑士的判断风格",
+    "content": "小骑士寡言而坚定，重视实际行动和投票，发言简短且不轻易改变目标，但可能因为信息表达不足而被怀疑。",
+    "keywords": ["小骑士", "性格", "寡言", "行动", "投票", "坚定"]
+  },
+  {
+    "npc_name": "大黄蜂",
+    "title": "大黄蜂的判断风格",
+    "content": "大黄蜂警觉、直接并喜欢连续追问，会主动施压检验回答是否一致，但强攻击性也可能制造额外敌意。",
+    "keywords": ["大黄蜂", "性格", "警觉", "追问", "施压", "一致性"]
+  },
+  {
+    "npc_name": "喜羊羊",
+    "title": "喜羊羊的判断风格",
+    "content": "喜羊羊乐观而聪明，善于组织分散信息、协调不同意见并提出后续可以验证的方案。",
+    "keywords": ["喜羊羊", "性格", "组织", "协调", "验证", "共识"]
+  },
+  {
+    "npc_name": "懒羊羊",
+    "title": "懒羊羊的判断风格",
+    "content": "懒羊羊随和而依赖直觉，能留意气氛和态度的突然变化，但逻辑整理较弱，也容易受到强势发言影响。",
+    "keywords": ["懒羊羊", "性格", "随和", "直觉", "态度变化", "跟票"]
+  },
+  {
+    "npc_name": "洛洛",
+    "title": "洛洛的判断风格",
+    "content": "洛洛擅长从技能、行动顺序和票型中建立规则模型，但需要警惕把人类失误错误解释为阵营证据。",
+    "keywords": ["洛洛", "性格", "规则", "行动顺序", "票型", "系统分析"]
+  },
+  {
+    "npc_name": "奇异博士",
+    "title": "奇异博士的判断风格",
+    "content": "奇异博士习惯同时保留多个假设并推演不同结果，直到新证据排除不成立的路径，但表达可能显得复杂和保留。",
+    "keywords": ["奇异博士", "性格", "假设", "推演", "多种可能", "全局"]
+  },
+  {
+    "npc_name": "*",
+    "title": "十二人狼人控场胜利",
+    "content": "除屠边外，当存活狼人数不少于存活好人数时，狼人已经形成控场并立即获胜。若猎人刚因狼袭或放逐出局且能够开枪，应先结算猎人开枪，再检查控场条件。",
+    "keywords": ["狼人", "控场", "人数", "胜利", "猎人", "结算顺序"]
+  },
+  {
+    "npc_name": "*",
+    "title": "公开身份声明与对跳",
+    "content": "白天角色可以公开声称自己是预言家、女巫、猎人或守卫。多个角色声称同一身份称为对跳，身份声明本身不是已验证事实，应结合验人、技能结果、发言逻辑和后续行动判断真假。",
+    "keywords": ["身份声明", "起跳", "对跳", "预言家", "女巫", "猎人", "守卫"]
+  },
+  {
+    "npc_name": "*",
+    "title": "预言家验人与狼人悍跳",
+    "content": "真预言家可以公开已经获得的验人结果；被指定承担悍跳策略的狼人也可能假装预言家并编造金水或查杀。判断预言家真假时要比较验人对象、结果、起跳时机和跨轮逻辑是否一致。",
+    "keywords": ["预言家", "验人", "金水", "查杀", "悍跳", "假预言家", "逻辑一致"]
+  },
+  {
+    "npc_name": "*",
+    "title": "神职公开技能信息",
+    "content": "女巫可以根据局势公开救人或用毒信息，守卫可以在成功挡刀后公开守护结果，猎人也可以在高压局面表明身份。公开技能信息会影响其他角色的怀疑，但仍需防范狼人伪装和信息冲突。",
+    "keywords": ["神职", "女巫", "守卫", "猎人", "技能", "公开信息", "伪装"]
+  },
+  {
+    "npc_name": "*",
+    "title": "第一日警上竞选流程",
+    "content": "第一夜结算后进入警上竞选。存活角色先报名，候选人按随机顺序依次发表竞选发言，再经过独立退水阶段；仍在警上的候选人接受警下角色同时投票。真预言家 NPC 必须上警并公布真实验人，玩家无论身份都可以自行决定是否上警以及如何发言。",
+    "keywords": ["警上", "竞选", "报名", "候选人", "预言家", "竞选发言", "第一日"]
+  },
+  {
+    "npc_name": "*",
+    "title": "退水与警长自动当选",
+    "content": "警上发言结束后必须进入退水阶段。候选人可以继续竞选或退水；只剩一名候选人时该角色自动当选警长，全部候选人退水时本局没有警长且警徽作废。狼人悍跳后也可以根据玩家起跳和场上压力选择退水。",
+    "keywords": ["退水", "警长", "自动当选", "警徽作废", "悍跳", "候选人"]
+  },
+  {
+    "npc_name": "*",
+    "title": "警长投票与PK规则",
+    "content": "警长竞选由未上警且仍在场的角色同时投票。最高票并列时，并列候选人进行一次 PK 发言并重新投票；第二轮仍平票时警徽作废。警长在之后的白天放逐投票中拥有一票半。",
+    "keywords": ["警长投票", "PK", "平票", "警徽", "一票半", "同时投票"]
+  },
+  {
+    "npc_name": "*",
+    "title": "警长决定白天发言顺序",
+    "content": "有警长时，前一夜若有人出局，先从出局者中随机选一个作为锚点，由警长选择出局左或出局右开始发言，警长按照自身座位自然进入顺序，不强制最后发言；前一夜无人出局时，警长选择警左或警右发言并自然成为最后一位。没有警长时使用随机首位和随机方向。",
+    "keywords": ["发言顺序", "出局左", "出局右", "警左", "警右", "警长", "自然座次", "最后发言"]
+  },
+  {
+    "npc_name": "*",
+    "title": "警长归票锁定",
+    "content": "警长轮到公开发言时可以提出暂时归票，后续角色会参考这项公开意见继续发言；全员发言结束后，警长可以维持或调整最终归票。只有最终归票会锁定警长自己的正式投票，其他角色仍可独立选择目标。",
+    "keywords": ["警长", "暂时归票", "最终归票", "调整", "锁定", "正式投票", "独立判断"]
+  },
+  {
+    "npc_name": "*",
+    "title": "警徽移交与猎人结算顺序",
+    "content": "警长出局后可以把警徽移交给一名仍在场的角色，或者撕毁警徽。若警长同时是可以开枪的猎人，应先完成猎人开枪，再处理警徽移交，最后检查胜负与继续流程。",
+    "keywords": ["警徽移交", "撕毁警徽", "警长出局", "猎人", "开枪", "结算顺序"]
+  },
+  {
+    "npc_name": "*",
+    "title": "狼人警上配合与狼查杀狼",
+    "content": "狼人可以在警上安排一名成员悍跳预言家，也可能根据玩家狼人的起跳选择不跳、退水或少量双狼起跳。悍跳狼可以给队友发金水；在队友公开压力很高且狼队仍有空间时，也可以全局至多一次把狼队友报成查杀以建立可信度。",
+    "keywords": ["狼人", "警上配合", "悍跳", "双狼起跳", "金水", "狼查杀狼", "退水"]
+  },
+  {
+    "npc_name": "*",
+    "title": "同步放逐投票与票型公开",
+    "content": "白天放逐投票时，玩家选择目标并填写理由后一次提交，玩家与所有存活 NPC 的票同时产生并立即结算。公开结果先按号码展示谁投给谁及票数合计，再展示每票的详细理由和公开 RAG 依据。",
+    "keywords": ["放逐投票", "同步投票", "票型", "投票理由", "票数合计", "RAG", "公开依据"]
+  }
+]

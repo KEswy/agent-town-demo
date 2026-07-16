@@ -1,0 +1,651 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main_script"]
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="2_player_scene"]
+[ext_resource type="PackedScene" path="res://scenes/NPC.tscn" id="3_npc_scene"]
+[ext_resource type="PackedScene" path="res://scenes/DialogBox.tscn" id="4_dialog_scene"]
+[ext_resource type="FontFile" path="res://assets/fonts/NotoSansSC-Variable.ttf" id="5_main_font"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wolf_panel"]
+bg_color = Color(0.08, 0.1, 0.12, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.66, 0.72, 0.8, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="Theme" id="Theme_main_cjk"]
+default_font = ExtResource("5_main_font")
+default_font_size = 13
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_main_script")
+
+[node name="Ground" type="Polygon2D" parent="."]
+color = Color(0.32, 0.53, 0.35, 1)
+polygon = PackedVector2Array(-1600, -1200, 1600, -1200, 1600, 1200, -1600, 1200)
+
+[node name="Path" type="Polygon2D" parent="."]
+color = Color(0.66, 0.61, 0.43, 1)
+polygon = PackedVector2Array(-1600, -70, 1600, -70, 1600, 70, -1600, 70)
+
+[node name="MeetingSquare" type="Polygon2D" parent="."]
+position = Vector2(350, 0)
+color = Color(0.76, 0.72, 0.58, 1)
+polygon = PackedVector2Array(-170, -120, 0, -180, 170, -120, 210, 40, 110, 180, -110, 180, -210, 40)
+
+[node name="Player" parent="." instance=ExtResource("2_player_scene")]
+position = Vector2(350, 0)
+
+[node name="Messi" parent="." instance=ExtResource("3_npc_scene")]
+position = Vector2(350, -285)
+npc_name = "梅西"
+dialog_text = "我是梅西。没有进行狼人杀时，我们也可以聊聊小镇。"
+wolf_character_id = 2
+body_color = Color(0.32, 0.65, 0.92, 1)
+
+[node name="Ronaldo" parent="." instance=ExtResource("3_npc_scene")]
+position = Vector2(518, -240)
+npc_name = "C罗"
+dialog_text = "我是C罗。开始游戏后，会议轮到我时再来听我的判断。"
+wolf_character_id = 3
+body_color = Color(0.86, 0.24, 0.2, 1)
+
+[node name="ZhouShen" parent="." instance=ExtResource("3_npc_scene")]
+position = Vector2(632, -118)
+npc_name = "周深"
+dialog_text = "我是周深。我会留意每个人说话时细微的变化。"
+wolf_character_id = 4
+body_color = Color(0.3, 0.78, 0.62, 1)
+
+[node name="MeiChangsu" parent="." instance=ExtResource("3_npc_scene")]
+position = Vector2(657, 41)
+npc_name = "梅长苏"
+dialog_text = "我是梅长苏。发言顺序本身，也可能是一条线索。"
+wolf_character_id = 5
+body_color = Color(0.48, 0.32, 0.7, 1)
+
+[node name="Zelda" parent="." instance=ExtResource("3_npc_scene")]
+position = Vector2(584, 187)
+npc_name = "塞尔达"
+dialog_text = "我是塞尔达。我更相信行动和经得住验证的信息。"
+wolf_character_id = 6
+body_color = Color(0.92, 0.72, 0.22, 1)
+
+[node name="LittleKnight" parent="." instance=ExtResource("3_npc_scene")]
+position = Vector2(437, 273)
+npc_name = "小骑士"
+dialog_text = "我是小骑士。我更相信行动和投票，而不是空泛的争论。"
+wolf_character_id = 7
+body_color = Color(0.18, 0.24, 0.34, 1)
+
+[node name="Hornet" parent="." instance=ExtResource("3_npc_scene")]
+position = Vector2(263, 273)
+npc_name = "大黄蜂"
+dialog_text = "我是大黄蜂。我会用连续的问题检验你的判断。"
+wolf_character_id = 8
+body_color = Color(0.94, 0.42, 0.16, 1)
+
+[node name="PleasantGoat" parent="." instance=ExtResource("3_npc_scene")]
+position = Vector2(116, 187)
+npc_name = "喜羊羊"
+dialog_text = "我是喜羊羊。我喜欢把分散的信息整理成可以验证的方案。"
+wolf_character_id = 9
+body_color = Color(0.32, 0.72, 0.88, 1)
+
+[node name="LazyGoat" parent="." instance=ExtResource("3_npc_scene")]
+position = Vector2(43, 41)
+npc_name = "懒羊羊"
+dialog_text = "我是懒羊羊。我不爱争论，但我会记住谁的态度突然变了。"
+wolf_character_id = 10
+body_color = Color(0.84, 0.72, 0.92, 1)
+
+[node name="Luoluo" parent="." instance=ExtResource("3_npc_scene")]
+position = Vector2(68, -118)
+npc_name = "洛洛"
+dialog_text = "我是洛洛。我会从行动顺序和投票结构中寻找规律。"
+wolf_character_id = 11
+body_color = Color(0.22, 0.58, 0.74, 1)
+
+[node name="DoctorStrange" parent="." instance=ExtResource("3_npc_scene")]
+position = Vector2(182, -240)
+npc_name = "奇异博士"
+dialog_text = "我是奇异博士。我会同时保留多种可能，直到证据排除它们。"
+wolf_character_id = 12
+body_color = Color(0.68, 0.18, 0.32, 1)
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="WolfPanel" type="Control" parent="UI"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -436.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 60.0
+grow_horizontal = 0
+clip_contents = true
+theme = SubResource("Theme_main_cjk")
+
+[node name="HeaderPanel" type="PanelContainer" parent="UI/WolfPanel"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 44.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_wolf_panel")
+
+[node name="HeaderMargin" type="MarginContainer" parent="UI/WolfPanel/HeaderPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 4
+
+[node name="HeaderRow" type="HBoxContainer" parent="UI/WolfPanel/HeaderPanel/HeaderMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="UI/WolfPanel/HeaderPanel/HeaderMargin/HeaderRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.84, 0.45, 1)
+theme_override_font_sizes/font_size = 17
+text = "RanRanHuaiHuaiKill"
+
+[node name="MenuSummaryLabel" type="Label" parent="UI/WolfPanel/HeaderPanel/HeaderMargin/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.76, 0.86, 0.95, 1)
+theme_override_font_sizes/font_size = 13
+text = "等待开始"
+horizontal_alignment = 2
+text_overrun_behavior = 3
+
+[node name="ToggleButton" type="Button" parent="UI/WolfPanel/HeaderPanel/HeaderMargin/HeaderRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "展开狼人杀面板"
+text = "▼"
+
+[node name="ContentPanel" type="PanelContainer" parent="UI/WolfPanel"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 52.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_wolf_panel")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="UI/WolfPanel/ContentPanel"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="UI/WolfPanel/ContentPanel/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 12
+
+[node name="VBox" type="VBoxContainer" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="PlayerIdentityBlock" type="VBoxContainer" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="RoleLabel" type="Label" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/PlayerIdentityBlock"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.84, 0.45, 1)
+theme_override_font_sizes/font_size = 19
+text = "你的身份：等待分配"
+autowrap_mode = 3
+
+[node name="WolfTeammatesLabel" type="Label" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/PlayerIdentityBlock"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.62, 0.62, 1)
+theme_override_font_sizes/font_size = 12
+text = "狼队友：暂无"
+autowrap_mode = 3
+
+[node name="PlayerActionHistoryBlock" type="VBoxContainer" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Title" type="Label" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/PlayerActionHistoryBlock"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.9, 0.86, 1)
+theme_override_font_sizes/font_size = 12
+text = "玩家行动记录"
+
+[node name="HistoryText" type="TextEdit" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/PlayerActionHistoryBlock"]
+custom_minimum_size = Vector2(0, 84)
+layout_mode = 2
+focus_mode = 0
+mouse_default_cursor_shape = 0
+theme_override_colors/font_readonly_color = Color(0.72, 0.8, 0.82, 1)
+theme_override_font_sizes/font_size = 11
+editable = false
+wrap_mode = 1
+text = "暂无行动记录。"
+
+[node name="StatusLabel" type="Label" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.76, 0.86, 0.95, 1)
+theme_override_font_sizes/font_size = 13
+text = "后端状态：等待开始"
+autowrap_mode = 3
+
+[node name="PlayerNameRow" type="HBoxContainer" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PlayerNameInput" type="LineEdit" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/PlayerNameRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "玩家"
+placeholder_text = "玩家名"
+
+[node name="StartGameButton" type="Button" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/PlayerNameRow"]
+layout_mode = 2
+text = "开始游戏"
+
+[node name="PlayerRoleRow" type="HBoxContainer" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PlayerRoleLabel" type="Label" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/PlayerRoleRow"]
+layout_mode = 2
+text = "玩家身份"
+vertical_alignment = 1
+
+[node name="PlayerRoleOption" type="OptionButton" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/PlayerRoleRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "默认随机；指定身份用于测试角色技能"
+
+[node name="LLMSettingsRow" type="HBoxContainer" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LLMEnabledToggle" type="CheckButton" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/LLMSettingsRow"]
+layout_mode = 2
+tooltip_text = "仅在后端已配置 LLM 时生效"
+text = "启用 LLM 表达"
+
+[node name="LLMSettingsHint" type="Label" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/LLMSettingsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.68, 0.74, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "默认关闭"
+vertical_alignment = 1
+
+[node name="StateActionRow" type="HBoxContainer" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RefreshStateButton" type="Button" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/StateActionRow"]
+layout_mode = 2
+disabled = true
+text = "刷新状态"
+
+[node name="ReviewGameButton" type="Button" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/StateActionRow"]
+layout_mode = 2
+disabled = true
+text = "查看本局复盘"
+
+[node name="GameInfoLabel" type="Label" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.94, 0.9, 1)
+theme_override_font_sizes/font_size = 14
+text = "点击开始后创建 12 人局。"
+autowrap_mode = 3
+
+[node name="SheriffOverviewLabel" type="Label" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.86, 0.52, 1)
+theme_override_colors/font_outline_color = Color(0.12, 0.1, 0.06, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 15
+text = "警上名单：暂无"
+autowrap_mode = 3
+
+[node name="NightActionLabel" type="Label" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.78, 0.7, 1)
+theme_override_font_sizes/font_size = 13
+text = "夜晚行动：开始游戏后可用"
+autowrap_mode = 3
+
+[node name="NightActionRow" type="HBoxContainer" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NightActionOption" type="OptionButton" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/NightActionRow"]
+custom_minimum_size = Vector2(104, 0)
+layout_mode = 2
+disabled = true
+
+[node name="NightTargetOption" type="OptionButton" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/NightActionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+
+[node name="SubmitNightActionButton" type="Button" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/NightActionRow"]
+layout_mode = 2
+disabled = true
+text = "提交行动"
+
+[node name="ResolveNightButton" type="Button" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/NightActionRow"]
+layout_mode = 2
+disabled = true
+text = "结算"
+
+[node name="HunterActionLabel" type="Label" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.72, 0.34, 1)
+theme_override_font_sizes/font_size = 13
+text = "猎人开枪：出局后可用"
+autowrap_mode = 3
+
+[node name="HunterActionRow" type="HBoxContainer" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HunterTargetOption" type="OptionButton" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/HunterActionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+
+[node name="HunterShootButton" type="Button" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/HunterActionRow"]
+layout_mode = 2
+disabled = true
+text = "开枪"
+
+[node name="HunterPassButton" type="Button" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/HunterActionRow"]
+layout_mode = 2
+disabled = true
+text = "不开枪"
+
+[node name="SheriffActionLabel" type="Label" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.84, 0.45, 1)
+theme_override_font_sizes/font_size = 13
+text = "警长操作：第一夜结束后可用"
+autowrap_mode = 3
+
+[node name="SheriffChoiceRow" type="HBoxContainer" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SheriffOption" type="OptionButton" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/SheriffChoiceRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+
+[node name="SheriffActionButton" type="Button" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/SheriffChoiceRow"]
+layout_mode = 2
+disabled = true
+text = "确认"
+
+[node name="SheriffSpeechRow" type="HBoxContainer" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SheriffSpeechInput" type="LineEdit" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/SheriffSpeechRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+editable = false
+placeholder_text = "输入警上或 PK 发言"
+
+[node name="SheriffSpeechButton" type="Button" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/SheriffSpeechRow"]
+layout_mode = 2
+disabled = true
+text = "提交警上发言"
+
+[node name="DaySpeechLabel" type="Label" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.91, 0.95, 1)
+theme_override_font_sizes/font_size = 13
+text = "白天发言：开始游戏后可用"
+autowrap_mode = 3
+
+[node name="TemporaryNominationRow" type="HBoxContainer" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TemporaryNominationLabel" type="Label" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/TemporaryNominationRow"]
+layout_mode = 2
+text = "暂时归票"
+vertical_alignment = 1
+
+[node name="TemporaryNominationOption" type="OptionButton" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/TemporaryNominationRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DaySpeechRow" type="HBoxContainer" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PlayerSpeechInput" type="LineEdit" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/DaySpeechRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+editable = false
+placeholder_text = "输入白天发言"
+
+[node name="SubmitSpeechButton" type="Button" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/DaySpeechRow"]
+layout_mode = 2
+disabled = true
+text = "提交发言"
+
+[node name="EndFreeActivityButton" type="Button" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/DaySpeechRow"]
+layout_mode = 2
+disabled = true
+text = "结束自由活动"
+
+[node name="VoteActionLabel" type="Label" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.86, 0.82, 0.98, 1)
+theme_override_font_sizes/font_size = 13
+text = "白天投票：开始游戏后可用"
+autowrap_mode = 3
+
+[node name="VoteReasonInput" type="LineEdit" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+editable = false
+placeholder_text = "填写投票理由"
+
+[node name="VoteActionRow" type="HBoxContainer" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="VoteTargetOption" type="OptionButton" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/VoteActionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+
+[node name="SubmitVoteButton" type="Button" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox/VoteActionRow"]
+layout_mode = 2
+disabled = true
+text = "投票并公布"
+
+[node name="VoteResultLabel" type="Label" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.9, 0.98, 1)
+theme_override_font_sizes/font_size = 13
+text = "票型：尚未公布"
+autowrap_mode = 3
+
+[node name="CharacterGrid" type="GridContainer" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 2
+
+[node name="PublicLogLabel" type="Label" parent="UI/WolfPanel/ContentPanel/ScrollContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.86, 0.78, 1)
+theme_override_font_sizes/font_size = 13
+text = "公开日志：暂无"
+autowrap_mode = 3
+
+[node name="GameSummaryOverlay" type="Control" parent="UI"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+theme = SubResource("Theme_main_cjk")
+
+[node name="Shade" type="ColorRect" parent="UI/GameSummaryOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.025, 0.03, 0.82)
+
+[node name="Panel" type="PanelContainer" parent="UI/GameSummaryOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 48.0
+offset_top = 36.0
+offset_right = -48.0
+offset_bottom = -36.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_wolf_panel")
+
+[node name="Margin" type="MarginContainer" parent="UI/GameSummaryOverlay/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 18
+
+[node name="VBox" type="VBoxContainer" parent="UI/GameSummaryOverlay/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HeaderRow" type="HBoxContainer" parent="UI/GameSummaryOverlay/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="UI/GameSummaryOverlay/Panel/Margin/VBox/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.98, 0.84, 0.45, 1)
+theme_override_font_sizes/font_size = 22
+text = "本局复盘"
+
+[node name="CloseButton" type="Button" parent="UI/GameSummaryOverlay/Panel/Margin/VBox/HeaderRow"]
+custom_minimum_size = Vector2(42, 38)
+layout_mode = 2
+tooltip_text = "关闭复盘"
+text = "X"
+
+[node name="WinnerLabel" type="Label" parent="UI/GameSummaryOverlay/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.95, 0.97, 1)
+theme_override_font_sizes/font_size = 16
+text = "正在读取对局结果..."
+autowrap_mode = 3
+
+[node name="SummaryTabs" type="TabContainer" parent="UI/GameSummaryOverlay/Panel/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="CharacterReview" type="ScrollContainer" parent="UI/GameSummaryOverlay/Panel/Margin/VBox/SummaryTabs"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="UI/GameSummaryOverlay/Panel/Margin/VBox/SummaryTabs/CharacterReview"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 10
+
+[node name="CharacterList" type="VBoxContainer" parent="UI/GameSummaryOverlay/Panel/Margin/VBox/SummaryTabs/CharacterReview/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="TimelineReview" type="ScrollContainer" parent="UI/GameSummaryOverlay/Panel/Margin/VBox/SummaryTabs"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="UI/GameSummaryOverlay/Panel/Margin/VBox/SummaryTabs/TimelineReview"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 10
+
+[node name="TimelineLabel" type="Label" parent="UI/GameSummaryOverlay/Panel/Margin/VBox/SummaryTabs/TimelineReview/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.88, 0.91, 0.93, 1)
+theme_override_font_sizes/font_size = 14
+text = "暂无时间线。"
+autowrap_mode = 3
+
+[node name="DialogBox" parent="UI" instance=ExtResource("4_dialog_scene")]
+
+[node name="ChatRequest" type="HTTPRequest" parent="."]
+
+[node name="MemoryViewRequest" type="HTTPRequest" parent="."]
+
+[node name="MemoryResetRequest" type="HTTPRequest" parent="."]
+
+[node name="ConfigReloadRequest" type="HTTPRequest" parent="."]
+
+[node name="GameStartRequest" type="HTTPRequest" parent="."]
+
+[node name="GameStateRequest" type="HTTPRequest" parent="."]
+
+[node name="NightActionRequest" type="HTTPRequest" parent="."]
+
+[node name="NightResolveRequest" type="HTTPRequest" parent="."]
+
+[node name="HunterShotRequest" type="HTTPRequest" parent="."]
+
+[node name="PlayerSpeechRequest" type="HTTPRequest" parent="."]
+
+[node name="NpcSpeechRequest" type="HTTPRequest" parent="."]
+
+[node name="EndFreeActivityRequest" type="HTTPRequest" parent="."]
+
+[node name="PrivateChatRequest" type="HTTPRequest" parent="."]
+
+[node name="SheriffActionRequest" type="HTTPRequest" parent="."]
+
+[node name="SheriffSpeechRequest" type="HTTPRequest" parent="."]
+
+[node name="CombinedVoteRequest" type="HTTPRequest" parent="."]
+
+[node name="GameSummaryRequest" type="HTTPRequest" parent="."]
